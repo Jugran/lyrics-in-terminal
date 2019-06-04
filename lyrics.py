@@ -24,15 +24,9 @@ def get_html(url):
 	return req_url.read().decode('utf-8')
 
 
-def get_azlyrics(html, width):
-	regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
-	url_list = regex.findall(html)
+def get_azlyrics(url, width):
 
-	if len(url_list) == 0:
-			html = get_html(url + query.replace('lyrics', 'azlyrics'))
-			return get_azlyrics(html, width)
-
-	az_html = get_html(url_list[0])
+	az_html = get_html(url)
 
 	az_regex = re.compile(r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
 
@@ -49,9 +43,9 @@ def get_azlyrics(html, width):
 	return lyrics_text
 
 
-def get_lyrics(query, width):
+def get_lyrics(url, width):
 
-	html = get_html(url + query)
+	html = get_html(url)
 	html_regex = re.compile(r'<div class="{}">(.*?)</div>'.format(class_name), re.S)
 
 	ly = '\n'.join(html_regex.findall(html)).split('\n')
@@ -61,11 +55,20 @@ def get_lyrics(query, width):
 	if len(ly) <= 1:
 		# No google result found!
 		# try azlyrics
-		lyrics_text = get_azlyrics(html, width)
+		print('azlyrics')
+		html = get_html(url + query.replace('lyrics', 'azlyrics'))
+
+		regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
+		az_url = regex.search(html).group(1)
+
+		if len(az_url) == 0:
+			return 'No Lyrics Found!'.center(width)
+
+		lyrics_text = get_azlyrics(az_url, width)
 
 	if len(lyrics_text) <= 2 * width:
 		if lyrics_text.replace('\n', ' ').strip() == '':
-			lyrics_text = 'No Lyrics Found!'.center(width)
+			return 'No Lyrics Found!'.center(width)
 
 	return lyrics_text
 
@@ -74,7 +77,9 @@ if len(sys.argv) > 1:
 
 	track_name = '-'.join(sys.argv[1:-1])
 
-	query = quote(track_name + ' lyrics')
+	tr = sys.argv[1] + '-' + sys.argv[2]
+
+	query = quote(tr + ' lyrics')
 
 	width = int(sys.argv[-1])
 
