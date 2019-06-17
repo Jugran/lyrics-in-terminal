@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from urllib.request import urlopen, Request
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 import sys
 import re
 
@@ -46,31 +46,32 @@ def get_azlyrics(url, width):
 def get_lyrics(url, width):
 
 	html = get_html(url)
-	html_regex = re.compile(r'<div class="{}">(.*?)</div>'.format(class_name), re.S)
+	html_regex = re.compile(r'<div class="{}">([^>]*?)</div>'.format(class_name), re.S)
 
-	ly = '\n'.join(html_regex.findall(html)).split('\n')
+	ly = '\n'.join(html_regex.findall(html)[:2]).split('\n')
 
 	lyrics_text = '\n'.join([ l.center(width) for l in ly ])
 
 	if len(ly) <= 1:
 		# No google result found!
 		# try azlyrics
-		print('azlyrics')
+		# print('azlyrics')
 		html = get_html(url + query.replace('lyrics', 'azlyrics'))
 
 		regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
-		az_url = regex.search(html).group(1)
+		az_url = regex.search(html)
 
-		if len(az_url) == 0:
+		if az_url == None:
 			return 'No Lyrics Found!'.center(width)
 
+		az_url = az_url.group(1)
 		lyrics_text = get_azlyrics(az_url, width)
 
 	if len(lyrics_text) <= 2 * width:
 		if lyrics_text.replace('\n', ' ').strip() == '':
 			return 'No Lyrics Found!'.center(width)
 
-	return lyrics_text
+	return lyrics_text.replace('&amp;', '&')
 
 
 if len(sys.argv) > 1:
