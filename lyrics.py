@@ -7,10 +7,9 @@ import re
 
 
 url = 'https://www.google.com/search?q='
-header = {'User-Agent' : 'Mozilla/5.0 Firefox'}
+header = {'User-Agent' : 'Mozilla/5.0'}
 
-class_name = 'BNeawe tAd8D AP7Wnd'		# dependent on User-Agent and sometimes doesn't work
-										# artist/ablum info <div class='BNeawe uEec3 AP7Wnd' >
+class_name = r'\w{5,7} \w{4,5} \w{5,7}'		# dependent on User-Agent and sometimes doesn't work
 
 def get_html(url):
 
@@ -19,14 +18,38 @@ def get_html(url):
 
 	if req_url.code != 200:
 		print('invalid request')
-		exit
+		exit(1)
 
 	return req_url.read().decode('utf-8')
 
 
-def get_azlyrics(url, width):
+def format_lyrics(lyrics, width):
+	lyrics_text = '\n'.join([line.center(width) for line in lyrics])
+	# center lyrics vertically here
 
-	az_html = get_html(url)
+	return lyrics_text.replace('&amp;', '&')
+
+
+def get_az_html(url):
+	html = get_html(url.replace('lyrics', 'azlyrics'))
+
+	regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
+	az_url = regex.search(html)
+
+	if az_url == None:
+		print( 'No Lyrics Found!'.center(width))
+		exit(0)
+	else:
+
+		header['User-Agent'] = 'Mozilla/5.0 Firefox/70.0'
+		az_url = az_url.group(1)
+		az_html = get_html(az_url)
+		return az_html
+
+
+def get_azlyrics(url, width):
+	# print('azlyrics:')
+	az_html = get_az_html(url)
 
 	az_regex = re.compile(r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
 
@@ -34,11 +57,10 @@ def get_azlyrics(url, width):
 
 	if ly == None:
 		# Az lyrics not found
-		return 'Azlyric missing...'.center(width)
+		return 'Azlyrics missing...'.center(width)
 
 	ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()
-
-	lyrics_text = '\n'.join([l.center(width) for l in ly.split('\n')])
+	lyrics_text = format_lyrics(ly.split('\n'), width)
 
 	return lyrics_text
 
@@ -48,48 +70,47 @@ def get_lyrics(url, width):
 	html = get_html(url)
 	html_regex = re.compile(r'<div class="{}">([^>]*?)</div>'.format(class_name), re.S)
 
-	ly = '\n'.join(html_regex.findall(html)[:2]).split('\n')
+	text_list = html_regex.findall(html)
 
-	lyrics_text = '\n'.join([ l.center(width) for l in ly ])
-
-	if len(ly) <= 1:
+	if len(text_list) < 2:
 		# No google result found!
-		# try azlyrics
-		# print('azlyrics')
-		html = get_html(url + query.replace('lyrics', 'azlyrics'))
+		lyrics_text = get_azlyrics(url, width)
+	else:
 
-		regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
-		az_url = regex.search(html)
+		ly = []
 
-		if az_url == None:
-			return 'No Lyrics Found!'.center(width)
+		for l in text_list[1:]:
+			# lyrics must be multiline, ignore the artist info below lyrics
+			if l.count('\n') > 2:
+				ly += l.split('\n')
 
-		az_url = az_url.group(1)
-		lyrics_text = get_azlyrics(az_url, width)
+		if len(ly) < 5:					# too short match for lyrics
+			lyrics_text = get_azlyrics(url, width)
+		else:
+			# format lyrics
+			lyrics_text = format_lyrics(ly, width)
+			
+	return lyrics_text
 
-	if len(lyrics_text) <= 2 * width:
-		if lyrics_text.replace('\n', ' ').strip() == '':
-			return 'No Lyrics Found!'.center(width)
 
-	return lyrics_text.replace('&amp;', '&')
+if __name__	== '__main__': 
 
+	if len(sys.argv) > 1:
 
-if len(sys.argv) > 1:
+		track_name = '-'.join(sys.argv[1:-1])
 
-	track_name = '-'.join(sys.argv[1:-1])
+		tr = sys.argv[1] + '-' + sys.argv[2]
 
-	tr = sys.argv[1] + '-' + sys.argv[2]
+		query = quote(tr + ' lyrics')
 
-	query = quote(tr + ' lyrics')
+		width = int(sys.argv[-1])
 
-	width = int(sys.argv[-1])
+	else:
+		print('No Track info provided, Exiting...')
+		exit
 
-else:
-	print('No Track info provided, Exiting...')
-	exit
+	print(track_name.center(width), (round(width * 0.8) * '-').center(width))
 
-print(track_name.center(width), (round(width*0.8) * '-').center(width))
+	lyrics = get_lyrics(url + query, width)
 
-lyrics = get_lyrics(url + query, width)
-
-print(lyrics)
+	print(lyrics)
