@@ -1,9 +1,17 @@
 #!/bin/bash
 
-ARTIST="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' | grep -A 3 artist | grep string | grep -v xesam | sed 's/^\s*//' | cut -d ' ' -f 2- | tr '(' ' ' | tr ')' ' ' | tr '"' ' ' )";
+PLAYER="$1"
+PLAYER="spotify"
 
-TITLE="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' | grep -A 3 title | grep string | grep -v xesam | sed 's/^\s*//' | sed 's/^variant\s*//' | cut -d ' ' -f 2- | tr '"' ' ' )";
+ARTIST="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.$PLAYER /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' | grep -A 3 'string "xesam:artist"' | grep -A 1 variant | grep -oP '"\K[^"]+')";
+
+TITLE="$(dbus-send --print-reply --session --dest=org.mpris.MediaPlayer2.$PLAYER /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata' | grep -A 3 'string "xesam:title"' | grep variant | grep -oP '"\K[^"]+')";
 
 columns=$(tput cols)
+#rows=$(tput lines)
+(python3 lyrics.py "$ARTIST " " $TITLE" ${columns:-80})
 
-(python3 lyrics.py "$ARTIST" "$TITLE" ${columns:-80})
+
+#TODO: add feature to fill the terminal with just lyrics and whitespace when lyrics are short
+
+# priority order check for different players for lyrics
