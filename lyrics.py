@@ -23,10 +23,18 @@ def get_html(url):
 	return req_url.read().decode('utf-8')
 
 
-def format_lyrics(lyrics, width):
-	lyrics_text = '\n'.join([line.center(width) for line in lyrics])
+def format_lyrics(lyrics, width, height):
+	lines = len(lyrics)
+	#lyrics_text = '\n'.join([line.center(width) for line in lyrics]).replace('&amp;', '&')
+	
 	# center lyrics vertically here
+	if lines < height:
+		space = height - lines
+		padding = space // 2
+		lyrics = [''] * (padding-3) + lyrics + [''] * (padding)
 
+	lyrics_text = '\n'.join([line.center(width) for line in lyrics])
+	
 	return lyrics_text.replace('&amp;', '&')
 
 
@@ -60,9 +68,9 @@ def get_azlyrics(url, width):
 		return 'Azlyrics missing...'.center(width)
 
 	ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()
-	lyrics_text = format_lyrics(ly.split('\n'), width)
+	lyrics_lines = ly.split('\n')
 
-	return lyrics_text
+	return lyrics_lines
 
 
 def get_lyrics(url, width):
@@ -74,7 +82,7 @@ def get_lyrics(url, width):
 
 	if len(text_list) < 2:
 		# No google result found!
-		lyrics_text = get_azlyrics(url, width)
+		lyrics_lines = get_azlyrics(url, width)
 	else:
 
 		ly = []
@@ -85,25 +93,26 @@ def get_lyrics(url, width):
 				ly += l.split('\n')
 
 		if len(ly) < 5:					# too short match for lyrics
-			lyrics_text = get_azlyrics(url, width)
+			lyrics_lines = get_azlyrics(url, width)
 		else:
 			# format lyrics
-			lyrics_text = format_lyrics(ly, width)
+			lyrics_lines = ly
 			
-	return lyrics_text
+	return lyrics_lines
 
 
 if __name__	== '__main__': 
 
 	if len(sys.argv) > 1:
 
-		track_name = '-'.join(sys.argv[1:-1])
+		track_name = '-'.join(sys.argv[1:-2])
 
 		tr = sys.argv[1] + '-' + sys.argv[2]
 
 		query = quote(tr + ' lyrics')
 
-		width = int(sys.argv[-1])
+		width = int(sys.argv[-2])
+		height = int(sys.argv[-1])
 
 	else:
 		print('No Track info provided, Exiting...')
@@ -111,6 +120,6 @@ if __name__	== '__main__':
 
 	print(track_name.center(width), (round(width * 0.8) * '-').center(width))
 
-	lyrics = get_lyrics(url + query, width)
-
+	lyrics_lines = get_lyrics(url + query, width)
+	lyrics = format_lyrics(lyrics_lines, width, height)
 	print(lyrics)
