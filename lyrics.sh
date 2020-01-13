@@ -12,6 +12,4 @@ rows=$(tput lines)
 (python3 lyrics.py "$ARTIST " " $TITLE" ${columns:-80} $rows)
 
 
-#TODO: add feature to fill the terminal with just lyrics and whitespace when lyrics are short
-
-# priority order check for different players for lyrics
+#TODO: priority order check for different players for lyrics
