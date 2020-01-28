@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from player import Player
@@ -26,22 +26,31 @@ class Window:
         self.current_pos = 0
 
         if self.player.running:
-            self.stdscr.addstr(0, 1, self.player.track.title, curses.A_REVERSE | curses.A_BOLD)
-            self.stdscr.addstr(1, 1, self.player.track.artist, curses.A_REVERSE)
+            self.set_titlebar()
 
             self.scroll_pad.addstr(self.player.track.get_text())
 
-            if self.player.track.justification == 0:
-                # center align
-                self.pad_offset = (self.width - self.player.track.width) // 2
-            elif self.player.track.justification != 1:
-                self.pad_offset = (self.width - self.player.track.width) - 2
+            self.set_offset()
 
             self.stdscr.refresh()
-            self.scroll_pad.refresh(self.current_pos, 0, 3, self.pad_offset, self.height - 2, self.width - 1)
+            self.scroll_pad.refresh(self.current_pos, 0, 4, self.pad_offset, self.height - 2, self.width - 1)
         else:
              self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
              self.stdscr.refresh()
+
+    def set_titlebar(self):
+
+        self.stdscr.addstr(0, 1, self.player.track.title.center(self.width - 1), curses.A_REVERSE)
+        self.stdscr.addstr(1, 1, self.player.track.artist.center(self.width - 1), curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
+        self.stdscr.addstr(2, 1, self.player.track.album.center(self.width - 1), curses.A_REVERSE | curses.A_ITALIC)
+        
+
+    def set_offset(self):
+        if self.player.track.justification == 0:
+                # center align
+            self.pad_offset = (self.width - self.player.track.width) // 2
+        elif self.player.track.justification != 1:
+            self.pad_offset = (self.width - self.player.track.width) - 2
 
     def main(self):
         key = ''
@@ -62,30 +71,25 @@ class Window:
             if self.player.running:
                 if key == curses.KEY_RESIZE:
                     self.stdscr.clear()
-                    if self.player.track.justification == 0:
-                        # center align
-                        self.pad_offset = (self.width - self.player.track.width) // 2
-                    elif self.player.track.justification != 1:
-                        self.pad_offset = (self.width - self.player.track.width) - 2
+                    self.set_offset()
 
                 #  self.stdscr.erase()
-                self.stdscr.addstr(0, 1, self.player.track.title, curses.A_REVERSE | curses.A_BOLD)
-                self.stdscr.addstr(1, 1, self.player.track.artist, curses.A_REVERSE)
-
+                self.set_titlebar()
+                
                 if key == curses.KEY_DOWN:
-                    if self.current_pos <= self.player.track.length * 0.6:
+                    if self.current_pos <= self.player.track.length * 0.8:
                         self.current_pos += 1
                     else:
-                        self.stdscr.addstr(self.height - 1, 0, 'END', curses.A_REVERSE)
+                        self.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
                 elif key == curses.KEY_UP:
                     if self.current_pos > 0:
-                        if self.current_pos >= self.player.track.length * 0.6:
+                        if self.current_pos >= self.player.track.length * 0.8:
                             self.stdscr.move(self.height - 1, 0)
                             self.stdscr.clrtoeol()
                         self.current_pos -= 1
 
                 self.stdscr.refresh()
-                self.scroll_pad.refresh(self.current_pos, 0, 3, self.pad_offset, self.height - 2, self.width - 1)
+                self.scroll_pad.refresh(self.current_pos, 0, 4, self.pad_offset, self.height - 2, self.width - 1)
             else:
                 self.stdscr.clear()
                 self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
@@ -97,7 +101,7 @@ def main(stdscr, player_name, **kwargs):
 
     win = Window(stdscr, player)
     #curses.cbreak()
-    win.stdscr.timeout(500)
+    win.stdscr.timeout(1500)
     win.main()
 
 
