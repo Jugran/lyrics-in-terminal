@@ -1,29 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from lyrics import Track
+from player import Player
 
 import curses
 import sys
 
-#  TITLE_HEIGHT = 1
-#  PADDING =1
-
+#TODO: text wrap for long lines 
+# DEUTSCHLAND, somewhere i belong - good test cases
 
 class Window:
-    def __init__(self, stdscr, track):
+    def __init__(self, stdscr, player):
         self.stdscr = stdscr
         self.height, self.width = stdscr.getmaxyx()
-        self.track = track 
-        self.scroll_pad = curses.newpad(track.length + 2, track.width + 2)
+        self.player = player
+        self.scroll_pad = curses.newpad(self.player.track.length + 2, self.player.track.width + 2)
         self.current_pos = 0
         self.pad_offset = 1
 
-        self.set_up()
-
-    def set_track(self, track):
-        self.track = track
-        # redraw screen
         self.set_up()
 
     def set_up(self):
@@ -31,70 +25,91 @@ class Window:
         curses.curs_set(0)
         self.current_pos = 0
 
-        self.stdscr.addstr(0, 1, self.track.title, curses.A_REVERSE | curses.A_BOLD)
-        self.stdscr.addstr(1, 1, track.artist, curses.A_REVERSE)
-        self.scroll_pad.addstr(self.track.get_text())
+        if self.player.running:
+            self.stdscr.addstr(0, 1, self.player.track.title, curses.A_REVERSE | curses.A_BOLD)
+            self.stdscr.addstr(1, 1, self.player.track.artist, curses.A_REVERSE)
 
-        if track.justification == 0:
-            # center align
-            self.pad_offset = 1 + (self.width - self.track.width) // 2
-           
-        self.stdscr.refresh()
-        self.scroll_pad.refresh(self.current_pos, 0, 3, self.pad_offset, self.height - 2, self.width - 1)
+            self.scroll_pad.addstr(self.player.track.get_text())
+
+            if self.player.track.justification == 0:
+                # center align
+                self.pad_offset = (self.width - self.player.track.width) // 2
+            elif self.player.track.justification != 1:
+                self.pad_offset = (self.width - self.player.track.width) - 2
+
+            self.stdscr.refresh()
+            self.scroll_pad.refresh(self.current_pos, 0, 3, self.pad_offset, self.height - 2, self.width - 1)
+        else:
+             self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
+             self.stdscr.refresh()
 
     def main(self):
         key = ''
 
-        while (key != ord('q') or key != ord('Q')):
+        while key != ord('q') and key != ord('Q'):
             key = self.stdscr.getch()
 
             self.height, self.width = self.stdscr.getmaxyx()
 
-            if track.justification == 0 and key == curses.KEY_RESIZE:
-                # center align
-                self.pad_offset = 1 + (self.width - self.track.width) // 2
-           
-            self.stdscr.erase()
-            self.stdscr.addstr(0, 1, self.track.title, curses.A_REVERSE | curses.A_BOLD)
-            self.stdscr.addstr(1, 1, self.track.artist, curses.A_REVERSE)
-            
-            if key == curses.KEY_DOWN:
-                if self.current_pos <= self.track.length * 0.6:
-                    self.current_pos += 1
-                else:
-                    self.stdscr.addstr(self.height - 1, 0, 'END', curses.A_REVERSE)
-            elif key == curses.KEY_UP:
-                if self.current_pos > 0:
-                    if self.current_pos >= self.track.length * 0.6:
-                        self.stdscr.move(self.height - 1, 0)
-                        self.stdscr.clrtoeol()
-                    self.current_pos -= 1
-            elif key == ord('q'):
-                break
+            if self.player.update():
+                self.stdscr.clear()
+                self.scroll_pad.clear()
+                self.scroll_pad.resize(self.player.track.length + 2, self.player.track.width + 2)
+                self.scroll_pad.addstr(self.player.track.get_text())
+                self.current_pos = 0
+                key = curses.KEY_RESIZE
 
-            self.stdscr.refresh()
-            self.scroll_pad.refresh(self.current_pos, 0, 3, self.pad_offset, self.height - 2, self.width - 1)
+            if self.player.running:
+                if key == curses.KEY_RESIZE:
+                    self.stdscr.clear()
+                    if self.player.track.justification == 0:
+                        # center align
+                        self.pad_offset = (self.width - self.player.track.width) // 2
+                    elif self.player.track.justification != 1:
+                        self.pad_offset = (self.width - self.player.track.width) - 2
+
+                #  self.stdscr.erase()
+                self.stdscr.addstr(0, 1, self.player.track.title, curses.A_REVERSE | curses.A_BOLD)
+                self.stdscr.addstr(1, 1, self.player.track.artist, curses.A_REVERSE)
+
+                if key == curses.KEY_DOWN:
+                    if self.current_pos <= self.player.track.length * 0.6:
+                        self.current_pos += 1
+                    else:
+                        self.stdscr.addstr(self.height - 1, 0, 'END', curses.A_REVERSE)
+                elif key == curses.KEY_UP:
+                    if self.current_pos > 0:
+                        if self.current_pos >= self.player.track.length * 0.6:
+                            self.stdscr.move(self.height - 1, 0)
+                            self.stdscr.clrtoeol()
+                        self.current_pos -= 1
+
+                self.stdscr.refresh()
+                self.scroll_pad.refresh(self.current_pos, 0, 3, self.pad_offset, self.height - 2, self.width - 1)
+            else:
+                self.stdscr.clear()
+                self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
+                self.stdscr.refresh()
 
 
-def main(stdscr, track):
-    win = Window(stdscr, track)
+def main(stdscr, player_name, **kwargs):
+    player = Player(player_name, **kwargs)
+
+    win = Window(stdscr, player)
+    #curses.cbreak()
+    win.stdscr.timeout(500)
     win.main()
 
-def start():
-    curses.wrapper(main)
+
+def start(player_name, **kwargs):
+    curses.wrapper(main, player_name, **kwargs)
+
 
 if __name__ == '__main__':
 
-    if len(sys.argv) >= 5:
-        artist = sys.argv[1].strip()
-        title = sys.argv[2].strip()
-
-        track = Track(artist, title, 1)
-        track.get_lyrics()
-        print(track.track_name)
-        
-        curses.wrapper(main, track)
-
+    if len(sys.argv) > 1:
+        player_name = sys.argv[1].strip()
     else:
-        print('No Track info provided, Exiting...')
-        exit
+        player_name = 'spotify'
+
+    start(player_name, justify=0)
