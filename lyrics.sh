@@ -17,7 +17,7 @@ fi
 
 columns=$(tput cols)
 rows=$(tput lines)
-(python3 lyrics.py "$ARTIST " " $TITLE" ${columns:-80} $rows)
+(python3 track.py "$ARTIST " " $TITLE" ${columns:-80} $rows)
 
 
 #TODO: priority order check for different players for lyrics

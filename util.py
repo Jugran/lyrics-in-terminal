@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from urllib.request import urlopen, Request
@@ -115,5 +115,3 @@ def get_lyrics(track_name):
             file.writelines(text)
 
     return lyrics_lines
-
-
