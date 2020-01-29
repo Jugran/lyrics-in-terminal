@@ -17,10 +17,10 @@ class Window:
         self.scroll_pad = curses.newpad(self.player.track.length + 2, self.player.track.width + 2)
         self.current_pos = 0
         self.pad_offset = 1
+        self.text_padding = 5
 
         curses.use_default_colors()
         self.stdscr.timeout(timeout)
-        
         self.set_up()
 
     def set_up(self):
@@ -29,10 +29,8 @@ class Window:
         self.current_pos = 0
 
         if self.player.running:
+            self.update_track()
             self.set_titlebar()
-            self.scroll_pad.addstr(self.player.track.get_text())
-            self.set_offset()
-
             self.stdscr.refresh()
             self.scroll_pad.refresh(self.current_pos, 0, 4, self.pad_offset, self.height - 2, self.width - 1)
         else:
@@ -40,10 +38,12 @@ class Window:
              self.stdscr.refresh()
 
     def set_titlebar(self):
-
-        self.stdscr.addstr(0, 1, self.player.track.title.center(self.width - 1), curses.A_REVERSE)
-        self.stdscr.addstr(1, 1, self.player.track.artist.center(self.width - 1), curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
-        self.stdscr.addstr(2, 1, self.player.track.album.center(self.width - 1), curses.A_REVERSE | curses.A_ITALIC)
+        track_info = self.player.track.track_info(self.width - 1)
+        ''' track_info -> ['title', 'artist', 'album'] - all algined
+        '''
+        self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
+        self.stdscr.addstr(1, 1, track_info[1], curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
+        self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE | curses.A_ITALIC)
         
 
     def set_offset(self):
@@ -66,6 +66,22 @@ class Window:
                 self.stdscr.clrtoeol()
             self.current_pos -= step
 
+    def update_track(self):
+        self.stdscr.clear()
+        self.scroll_pad.clear()
+
+        if self.player.track.width > self.width - self.text_padding:
+            text = self.player.track.wrapped(self.width - 2)
+        else:
+            text = self.player.track.get_text()
+
+        pad_height = max(self.height, self.player.track.length) + 2
+        pad_width = max(self.width, self.player.track.width) + 2
+
+        self.scroll_pad.resize(pad_height, pad_width)
+        self.scroll_pad.addstr(text)
+        self.set_offset()
+
     def main(self):
         key = ''
 
@@ -76,17 +92,13 @@ class Window:
 
             if key == -1:
                 if self.player.update():
-                    self.stdscr.clear()
-                    self.scroll_pad.clear()
-                    self.scroll_pad.resize(self.player.track.length + 2, self.player.track.width + 2)
-                    self.scroll_pad.addstr(self.player.track.get_text())
                     self.current_pos = 0
-                    key = curses.KEY_RESIZE
+                    self.update_track()
+                    
 
             if self.player.running:
                 if key == curses.KEY_RESIZE:
-                    self.stdscr.clear()
-                    self.set_offset()
+                    self.update_track()
 
                 if key == curses.KEY_DOWN:
                     self.scroll_up()

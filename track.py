@@ -3,17 +3,17 @@
 
 import sys
 import util
+from textwrap import wrap
 
 JUSTIFICATION = 0
 
-
-def justify(text, width, justification=1):
+def justify(lines, width, justification=1):
     if justification == 1:
-        return text
+        return lines
     elif justification == 0:
-        return [line.center(width) for line in text]
+        return [line.center(width) for line in lines]
     else:
-        return [line.rjust(width) for line in text]
+        return [line.rjust(width) for line in lines]
 
 
 class Track:
@@ -44,6 +44,12 @@ class Track:
     def track_name(self):
         return self.artist + ' - ' + self.title
 
+    def track_info(self, width):
+        trackinfo = justify([self.title, self.artist, self.album], width, self.justification)
+        trackinfo = [t + ' ' * (width - len(t)) for t in trackinfo]
+
+        return trackinfo
+
     def update(self, artist, title, album, trackid, art_url):
         self.artist = artist
         self.title = title
@@ -53,25 +59,53 @@ class Track:
         self.get_lyrics()
 
     def get_lyrics(self):
-        lyrics = util.get_lyrics(self.track_name)
+        self.lyrics = util.get_lyrics(self.track_name)
 
         if not self.hard_format:
-            self.width = len(max(lyrics, key=len))
+            self.width = len(max(self.lyrics, key=len))
 
-        self.length = len(lyrics)
-        self.lyrics = self.format_lyrics(lyrics)
+        self.length = len(self.lyrics)
 
-    def format_lyrics(self, lyrics):
+    def justify(self):
+        return justify(self.lyrics, self.width, self.justification)
+
+    def format_lyrics(self):
         # center lyrics vertically
         if self.length < self.height and self.hard_format:
             space = (self.height - self.length) // 2
             padding = [''] * (space - 2)
-            lyrics = padding + lyrics + padding
+            self.lyrics = padding + self.lyrics + padding
 
-        return justify(lyrics, self.width, self.justification)
+    def wrapped(self, width):
+        raw_lyrics = self.lyrics
+
+        lines = []
+        for line in self.lyrics:
+            if len(line) > width:
+                line = wrap(line, width=width)
+            if isinstance(line, list):
+                lines += line
+            else:
+                lines.append(line)
+
+        self.width = len(max(lines, key=len))
+        self.length = len(lines)
+
+        self.lyrics = lines
+        wrapped = self.get_text()
+        self.lyrics = raw_lyrics
+
+        return wrapped
+
 
     def get_text(self):
-        return '\n'.join(line for line in self.lyrics)
+        self.format_lyrics()
+        lyrics = self.justify()
+
+        self.width = len(max(self.lyrics, key=len))
+        self.length = len(self.lyrics)
+
+        return '\n'.join(line for line in lyrics)
 
 
 if __name__ == '__main__':
