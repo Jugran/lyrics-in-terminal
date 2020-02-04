@@ -58,8 +58,8 @@ class Player:
 
         return False
 
-    def refresh(self):
-        self.track.refresh_lyrics(source='az')
+    def refresh(self, source='az'):
+        self.track.refresh_lyrics(source=source)
 
     def next(self):
         pass
@@ -69,9 +69,3 @@ class Player:
 
     def play_toggle(self):
         pass
-
-
-
-if __name__ == '__main__':
-    player = Player('spotify')
-

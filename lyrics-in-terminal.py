@@ -6,9 +6,6 @@ from player import Player
 import curses
 import sys
 
-#   TODO: text wrap for long lines 
-#   DEUTSCHLAND, somewhere i belong - good test cases
-
 class Window:
     def __init__(self, stdscr, player, timeout=1500):
         self.stdscr = stdscr
@@ -39,20 +36,21 @@ class Window:
 
     def set_titlebar(self):
         track_info = self.player.track.track_info(self.width - 1)
-        ''' track_info -> ['title', 'artist', 'album'] - all algined
-        '''
+
+        # track_info -> ['title', 'artist', 'album'] - all algined
         self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
         self.stdscr.addstr(1, 1, track_info[1], curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
         self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE | curses.A_ITALIC)
         
-
     def set_offset(self):
-        if self.player.track.justification == 0:
+        if self.player.track.alignment == 0:
                 # center align
             self.pad_offset = (self.width - self.player.track.width) // 2
-        elif self.player.track.justification != 1:
+        elif self.player.track.alignment == 1:
+            self.pad_offset = 2
+        else:
             self.pad_offset = (self.width - self.player.track.width) - 2
-
+    
     def scroll_up(self, step=1):
         if self.current_pos <= self.player.track.length * 0.8:
             self.current_pos += step
@@ -109,12 +107,25 @@ class Window:
                     self.scroll_down(5)
                     self.stdscr.erase()
                 elif key == ord('r'):
-                    self.player.refresh()
+                    self.player.refresh('az')
+                    self.current_pos = 0
+                    self.update_track()
+                elif key == ord('R'):
+                    self.player.refresh('google')
                     self.current_pos = 0
                     self.update_track()
 
                 # keys to change alignment
                 # j = left | k = center | l = right
+                elif key == ord('j'):
+                    self.player.track.alignment=1
+                    self.update_track()
+                elif key == ord('k'):
+                    self.player.track.alignment=0
+                    self.update_track()
+                elif key == ord('l'):
+                    self.player.track.alignment=2
+                    self.update_track()                    
 
                 self.set_titlebar()
                 self.stdscr.refresh()
@@ -146,4 +157,4 @@ if __name__ == '__main__':
     else:
         player_name = 'spotify'
 
-    start(player_name, justify=0)
+    start(player_name, align=1)

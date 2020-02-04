@@ -118,3 +118,11 @@ def get_lyrics(track_name, cache=True, source='google'):
             file.writelines(text)
 
     return lyrics_lines
+
+def align(lines, width, alignment=1):
+    if alignment == 1:
+        return lines
+    elif alignment == 0:
+        return [line.center(width) for line in lines]
+    else:
+        return [line.rjust(width) for line in lines]

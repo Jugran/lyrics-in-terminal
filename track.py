@@ -5,29 +5,20 @@ import sys
 import util
 from textwrap import wrap
 
-JUSTIFICATION = 0
-
-def justify(lines, width, justification=1):
-    if justification == 1:
-        return lines
-    elif justification == 0:
-        return [line.center(width) for line in lines]
-    else:
-        return [line.rjust(width) for line in lines]
-
+ALIGNMENT = 0
 
 class Track:
     def __init__(self,
                  artist=None,
                  title=None,
-                 justify=1,
+                 align=1,
                  width=0,
                  height=0,
                  hard_format=False):
 
         self.title = title
         self.artist = artist
-        self.justification = justify
+        self.alignment = align
         self.hard_format = hard_format
         self.width = width
         self.height = height
@@ -45,8 +36,11 @@ class Track:
         return self.artist + ' - ' + self.title
 
     def track_info(self, width):
-        trackinfo = justify([self.title, self.artist, self.album], width, self.justification)
-        trackinfo = [t + ' ' * (width - len(t)) for t in trackinfo]
+        trackinfo = util.align([self.title, self.artist, self.album], width, self.alignment)
+        
+        offset = self.alignment%2
+        padding = ' ' * offset
+        trackinfo = [padding + t + ' ' * (width - len(t) - offset) for t in trackinfo]
 
         return trackinfo
 
@@ -71,8 +65,8 @@ class Track:
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
 
-    def justify(self):
-        return justify(self.lyrics, self.width, self.justification)
+    def align(self):
+        return util.align(self.lyrics, self.width, self.alignment)
 
     def format_lyrics(self):
         # center lyrics vertically
@@ -102,10 +96,9 @@ class Track:
 
         return wrapped
 
-
     def get_text(self):
         self.format_lyrics()
-        lyrics = self.justify()
+        lyrics = self.align()
 
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
@@ -121,11 +114,11 @@ if __name__ == '__main__':
         width = int(sys.argv[-2])
         height = int(sys.argv[-1])
 
-        track = Track(artist, title, JUSTIFICATION, width, height, True)
+        track = Track(artist, title, ALIGNMENT, width, height, True)
         track.get_lyrics()
 
         topline = [track.track_name, round(width * 0.8) * '-']
-        topline = '\n'.join(justify(topline, width, JUSTIFICATION))
+        topline = '\n'.join(util.align(topline, width, ALIGNMENT))
         print(topline, '\n' + track.get_text())
 
     else:
