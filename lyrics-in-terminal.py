@@ -95,12 +95,10 @@ class Window:
                     self.current_pos = 0
                     self.update_track()
                     
-
             if self.player.running:
                 if key == curses.KEY_RESIZE:
                     self.update_track()
-
-                if key == curses.KEY_DOWN:
+                elif key == curses.KEY_DOWN:
                     self.scroll_up()
                 elif key == curses.KEY_RIGHT:
                     self.scroll_up(5)
@@ -110,6 +108,10 @@ class Window:
                 elif key == curses.KEY_LEFT:
                     self.scroll_down(5)
                     self.stdscr.erase()
+                elif key == ord('r'):
+                    self.player.refresh()
+                    self.current_pos = 0
+                    self.update_track()
 
                 # keys to change alignment
                 # j = left | k = center | l = right

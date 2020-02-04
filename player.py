@@ -22,8 +22,7 @@ class Player:
     def get_bus(self):
         try:
             self.session_bus = dbus.SessionBus()
-            self.player_bus = self.session_bus.get_object(f'org.mpris.MediaPlayer2.{self.player_name}',
-                '/org/mpris/MediaPlayer2')
+            self.player_bus = self.session_bus.get_object(f'org.mpris.MediaPlayer2.{self.player_name}', '/org/mpris/MediaPlayer2')
             self.player_interface = dbus.Interface(self.player_bus, 'org.freedesktop.DBus.Properties')
             self.running = True
         except dbus.exceptions.DBusException:
@@ -46,7 +45,7 @@ class Player:
                 album = self.metadata['xesam:album']
                 arturl = self.metadata['mpris:artUrl']
                 trackid = self.metadata['mpris:trackid']
-            except IndexError:
+            except (IndexError, KeyError) as e:
                 self.running = False
                 return False
 
@@ -58,6 +57,9 @@ class Player:
                 return True
 
         return False
+
+    def refresh(self):
+        self.track.refresh_lyrics(source='az')
 
     def next(self):
         pass

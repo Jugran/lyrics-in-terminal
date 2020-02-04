@@ -66,6 +66,11 @@ class Track:
 
         self.length = len(self.lyrics)
 
+    def refresh_lyrics(self, source):
+        self.lyrics = util.get_lyrics(self.track_name, cache=False, source=source)
+        self.width = len(max(self.lyrics, key=len))
+        self.length = len(self.lyrics)
+
     def justify(self):
         return justify(self.lyrics, self.width, self.justification)
 

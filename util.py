@@ -90,7 +90,7 @@ def fetch_lyrics(url):
     return lyrics_lines
 
 
-def get_lyrics(track_name):
+def get_lyrics(track_name, cache=True, source='google'):
         # check save cache for lyrics
 
     filename = track_name.strip().replace(' ', '')
@@ -99,12 +99,15 @@ def get_lyrics(track_name):
     if  not os.path.isdir(CACHE_PATH):
         os.makedirs(CACHE_PATH)
 
-    if os.path.isfile(filepath):                
+    if os.path.isfile(filepath) and cache:                
         # lyrics exist
         with open(filepath) as file:
             lyrics_lines = file.read().splitlines()
     else:
-        lyrics_lines = fetch_lyrics(url + query(track_name))
+        if source == 'google':
+            lyrics_lines = fetch_lyrics(url + query(track_name))
+        else:
+            lyrics_lines = get_azlyrics(url + query(track_name))
         
         if isinstance(lyrics_lines, str):
             return ['lyrics not found! :(', 'Issue is:', lyrics_lines]
