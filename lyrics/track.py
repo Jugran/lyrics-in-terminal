@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import util
+from . import util
 from textwrap import wrap
 
 ALIGNMENT = 0

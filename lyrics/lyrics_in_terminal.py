@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from player import Player
+from .player import Player
 
 import curses
 import sys
@@ -146,15 +146,11 @@ def main(stdscr, player_name, **kwargs):
     win.main()
 
 
-def start(player_name, **kwargs):
-    curses.wrapper(main, player_name, **kwargs)
-
-
-if __name__ == '__main__':
-
-    if len(sys.argv) > 1:
-        player_name = sys.argv[1].strip()
+def start(player_name=None):
+    if player_name is None:
+        player_name='spotify'
     else:
-        player_name = 'spotify'
+        player_name = player_name.strip()
 
-    start(player_name, align=1)
+    curses.wrapper(main, player_name, align=1)
+

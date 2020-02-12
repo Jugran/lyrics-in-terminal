@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from track import Track
+from .track import Track
 
 import dbus
 
