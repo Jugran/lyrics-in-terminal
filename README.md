@@ -1,22 +1,57 @@
 # Lyrics-in-Terminal
+Shows lyrics of songs from your favourite music player in terminal.
+
+## Supported Players
+Almost all of the mpris specification compliant media players are supported, including -
+* Spotify
+* VLC Media player
+* Rhythmbox
+* Audacious
 
 
->Currently, only supports Spotify & VLC media player music detection on GNU/Linux
+## Requirements
+* Python >= 3.6
+* dbus-python
+* curses
 
-- - - - 
+
 ## Installation
-##### From PyPi
+
+### From PyPi
 ```sh
 pip install lyrics-in-terminal
+```
+> If pip install fails, then try installing python-dbus package from your distribution's repository first.
+
+### From Source
+First install dbus-python from your distribution's repository.
+
+##### Debian and Ubuntu
+```sh
+sudo apt install python-dbus
+```
+##### Arch Linux
+```sh
+sudo pacman -S python-dbus
+```
+Install from source
+```sh
+git clone https://github.com/Jugran/lyrics-in-terminal.git
+cd lyrics-in-terminal
+python setup.py install --user
 ```
 
 ## Usage
 ```sh
-lyrics
+$ lyrics
 ```
-Default player is Spotify, if you want to show lyrics from VLC Media Player then pass vlc as an argument
+Default player is Spotify, if you want to show lyrics from some other then pass player name as an argument
 ```sh
-lyrics vlc
+$ lyrics {playername}
+
+$ lyrics vlc
+$ lyrics audacious
+$ lyrics rhythmbox
 ```
 
 ### Keybindings

@@ -51,7 +51,7 @@ class Player:
 
             if trackid.find('spotify:ad') != -1:
                 self.running = False
-            elif self.track.trackid != trackid:
+            elif self.track.trackid != trackid or self.track.title != title:
                 #update
                 self.track.update(artist, title, album, trackid, arturl)
                 return True

@@ -148,7 +148,10 @@ def main(stdscr, player_name, **kwargs):
 
 def start(player_name=None):
     if player_name is None:
-        player_name='spotify'
+        if len(sys.argv) >= 2:
+            player_name=sys.argv[1].strip()
+        else:
+            player_name='spotify'
     else:
         player_name = player_name.strip()
 

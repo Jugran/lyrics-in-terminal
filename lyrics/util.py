@@ -22,9 +22,11 @@ def query(track_name):
 
 
 def get_html(url, header=HEADER):
-
-    req = Request(url, data=None, headers=header)
-    req_url = urlopen(req)
+    try:
+        req = Request(url, data=None, headers=header)
+        req_url = urlopen(req)
+    except Exception as e:
+        return 'Cannot connect to internet!', e
 
     if req_url.code != 200:
         print('invalid request')
@@ -36,6 +38,9 @@ def get_html(url, header=HEADER):
 def get_az_html(url):
 
     html = get_html(url.replace('lyrics', 'azlyrics'))
+    if isinstance(html, tuple):
+        return html[0]
+
     regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
     az_url = regex.search(html)
 
@@ -50,6 +55,9 @@ def get_az_html(url):
 
 def get_azlyrics(url):
     az_html = get_az_html(url)
+    if isinstance(az_html, tuple):
+        return az_html[0]
+
     az_regex = re.compile(r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
 
     ly = az_regex.search(az_html)
@@ -66,6 +74,9 @@ def get_azlyrics(url):
 def fetch_lyrics(url):
 
     html = get_html(url)
+    if isinstance(html, tuple):
+        return html[0]
+
     html_regex = re.compile(r'<div class="{}">([^>]*?)</div>'.format(CLASS_NAME), re.S)
 
     text_list = html_regex.findall(html)
@@ -93,7 +104,8 @@ def fetch_lyrics(url):
 def get_lyrics(track_name, cache=True, source='google'):
         # check save cache for lyrics
 
-    filename = track_name.strip().replace(' ', '')
+    filename = track_name.strip()
+    filename = filename.replace(' ', '').replace('/',' ').replace('.', '')
     filepath = os.path.join(CACHE_PATH, filename)
 
     if  not os.path.isdir(CACHE_PATH):
