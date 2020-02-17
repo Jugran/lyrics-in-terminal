@@ -65,7 +65,12 @@ def get_azlyrics(url):
         # Az lyrics not found
         return 'Azlyrics missing...'
 
-    ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()
+    rep = {'&quot;': '\"', '&amp;': '&'}
+
+    ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()  
+    # ly = ly.replace('&quot;', '\"').replace('&amp;', '&')
+    # regex = re.compile('|'.join(substrings))
+    ly = re.sub('|'.join(rep.keys()), lambda match: rep[match.group(0)], ly)
     lyrics_lines = ly.split('\n')
 
     return lyrics_lines
@@ -100,12 +105,11 @@ def fetch_lyrics(url):
 
     return lyrics_lines
 
-
 def get_lyrics(track_name, cache=True, source='google'):
         # check save cache for lyrics
 
     filename = track_name.strip()
-    filename = filename.replace(' ', '').replace('/',' ').replace('.', '')
+    filename = re.sub(r'\s|\/|\\|\.', '', filename)
     filepath = os.path.join(CACHE_PATH, filename)
 
     if  not os.path.isdir(CACHE_PATH):
@@ -130,6 +134,19 @@ def get_lyrics(track_name, cache=True, source='google'):
             file.writelines(text)
 
     return lyrics_lines
+
+def delete_lyrics(track_name):
+    filename = track_name.strip()
+    filename = re.sub(r'\s|\/|\\|\.', '', filename)
+    filepath = os.path.join(CACHE_PATH, filename)
+
+    if os.path.isfile(filepath):                
+        # lyrics exist
+        os.remove(filepath)
+        return True
+    
+    return False
+
 
 def align(lines, width, alignment=1):
     if alignment == 1:

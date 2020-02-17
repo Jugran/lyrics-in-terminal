@@ -1,4 +1,8 @@
-# Lyrics-in-Terminal
+# Lyrics-In-Terminal
+[![GitHub release](https://img.shields.io/github/release/Jugran/lyrics-in-terminal/all.svg)](https://github.com/Jugran/lyrics-in-terminal/releases)
+[![GitHub license](https://img.shields.io/github/license/Jugran/lyrics-in-terminal.svg)](https://github.com/Jugran/lyrics-in-terminal/blob/master/LICENSE)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/lyrics-in-terminal.svg)](https://pypi.python.org/pypi/lyrics-in-terminal/)
+
 Shows lyrics of songs from your favourite music player in terminal.
 
 ## Supported Players
@@ -67,9 +71,11 @@ $ lyrics rhythmbox
 | Align Text Left          | <kbd>j</kbd>  |
 | Update Lyrics<br>(from Azlyrics)    | <kbd>r</kbd>  |
 | Update Lyrics<br>(from Google)    | <kbd>R</kbd>  |
+| Delete lyrics file 		| <kbd>d</kbd> |
 | Quit Program        | <kbd>q</kbd>  |
 
-- Update Lyrics: Deletes local cached lyrics and fetches lyrics from the internet. 
+- Update Lyrics: Deletes local cached lyrics and fetches lyrics from the internet.
+- Delete Lyrics: Deletes local lyrics text file from ```~/.cache/lyrics/{trackname}```
 
 License
 ----

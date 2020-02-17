@@ -105,6 +105,9 @@ class Track:
 
         return '\n'.join(line for line in lyrics)
 
+    def delete_lyrics(self):
+        return util.delete_lyrics(self.track_name)
+
 
 if __name__ == '__main__':
 
