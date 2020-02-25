@@ -1,0 +1,24 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "lyrics"
+author = "Samarth Jugran"
+author-email = "jugransamarth@gmail.com"
+home-page = "https://github.com/Jugran/lyrics-in-terminal"
+description-file = "README.md"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux"
+]
+requires-python = ">=3.6"
+dist-name = "lyrics-in-terminal"
+requires = ["dbus-python"]
+
+[tool.flit.metadata.requires-extra]
+dev = ["flit"]
+
+[tool.flit.scripts]
+lyrics = "lyrics.lyrics_in_terminal:start"

@@ -38,7 +38,7 @@ Install from source
 ```sh
 git clone https://github.com/Jugran/lyrics-in-terminal.git
 cd lyrics-in-terminal
-python setup.py install --user
+python3 -m pip install --user .
 ```
 
 ## Usage
@@ -69,13 +69,13 @@ $ lyrics rhythmbox
 | Update Lyrics<br>(from Google)    | <kbd>R</kbd>  |
 | Quit Program        | <kbd>q</kbd>  |
 
-- Update Lyrics: Deletes local cached lyrics and fetches lyrics from the internet. 
+- Update Lyrics: Deletes local cached lyrics and fetches lyrics from the internet.
 
 License
 ----
 MIT
 - - - -
-<!-- 
+<!--
 ##### Using different pager
 If you dont want to install extra ```python-dbus``` package and want to use external pager program like ```less``` and ```more```, then execute ```lyrics.sh``` script instead.
 
@@ -96,6 +96,6 @@ lyrics vlc | less
 If certain characters are missing or incorrect then pass -r (raw text mode) flag to less.
 
 ```sh
-lyrics | less -r 
+lyrics | less -r
 ```	 -->
 
