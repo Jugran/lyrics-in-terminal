@@ -5,6 +5,9 @@
 
 Shows lyrics of songs from your favourite music player in terminal.
 
+![lyrics](https://raw.githubusercontent.com/Jugran/lyrics-in-terminal/master/images/001.png)
+![lyrics](https://raw.githubusercontent.com/Jugran/lyrics-in-terminal/master/images/003.png)
+
 ## Supported Players
 Almost all of the mpris specification compliant media players are supported, including -
 * Spotify
