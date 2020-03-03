@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from .track import Track
+from track import Track
 
 import dbus
 
@@ -59,7 +59,7 @@ class Player:
         return False
 
     def refresh(self, source='az'):
-        self.track.refresh_lyrics(source=source)
+        self.track.get_lyrics(cache=False, source=source)
 
     def next(self):
         pass
