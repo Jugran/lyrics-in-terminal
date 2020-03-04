@@ -43,8 +43,7 @@ class Player:
                 title = self.metadata['xesam:title']
                 artist = self.metadata['xesam:artist'][0]
                 album = self.metadata['xesam:album']
-                # arturl = self.metadata['mpris:artUrl']
-                duration = int(self.metadata['mpris:length'])
+                arturl = self.metadata['mpris:artUrl']
                 trackid = self.metadata['mpris:trackid']
             except (IndexError, KeyError) as e:
                 self.running = False
@@ -54,8 +53,7 @@ class Player:
                 self.running = False
             elif self.track.trackid != trackid or self.track.title != title:
                 #update
-                duration = duration / 10**6     # microseconds to seconds
-                self.track.update(artist, title, album, trackid, duration)
+                self.track.update(artist, title, album, trackid, arturl)
                 return True
 
         return False

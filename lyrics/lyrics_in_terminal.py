@@ -6,28 +6,6 @@ from player import Player
 import curses
 import sys
 
-# TODO: add auto scroll - change to constant scroll (3 lines per 5 sec etc)
-
-# TODO: add config file support
-#		https://docs.python.org/3/library/configparser.html
-
-class Scroller:
-	def __init__(self, track_length, track_lines):
-		self.time = 0
-		self.step_interval = track_length / track_lines
-		self.scroll = 0
-
-	def update(self, time_elapsed, height):
-		self.time += time_elapsed
-		self.scroll = int(self.time / self.step_interval)
-
-		if self.scroll < height * 0.5:
-			return 0 
-		else:
-			return int(self.scroll - height * 0.5)
-
-class infoBar:
-	pass
 
 class Window:
 	def __init__(self, stdscr, player, timeout=1500):
@@ -38,13 +16,10 @@ class Window:
 		self.current_pos = 0
 		self.pad_offset = 1
 		self.text_padding = 5
-
-		self.timeout = timeout
-		self.autoscrolling = False
-		self.scroller = None
+		self.autoscroll = False
 
 		curses.use_default_colors()
-		self.stdscr.timeout(self.timeout)
+		self.stdscr.timeout(timeout)
 		self.set_up()
 
 	def set_up(self):
@@ -128,7 +103,7 @@ class Window:
 			self.player.refresh('google')
 			self.current_pos = 0
 			self.update_track()
-
+			
 		# keys to change alignment
 		# j = left | k = center | l = right
 		elif key == ord('j'):
@@ -145,24 +120,6 @@ class Window:
 			if self.player.track.delete_lyrics():
 				self.stdscr.addstr(self.height - 1, self.width - 10, ' Deleted ', curses.A_REVERSE)
 
-		elif key == ord('a'):
-			if self.autoscrolling:
-				self.autoscrolling = False
-				# self.scroller = None
-			else:
-				self.autoscrolling = True
-				
-
-	def autoscroll(self):
-		if self.player.running:
-			step = self.scroller.update(self.timeout / 1000, self.height)
-			s = f'step: {step} current_pos: {self.current_pos} scroll: {self.scroller.scroll}'
-
-			self.scroll_down(step)
-
-			self.stdscr.addstr(self.height - 1, 10, s, curses.A_REVERSE)
-			# self.stdscr.refresh()
-
 	def main(self):
 		key = ''
 
@@ -174,14 +131,10 @@ class Window:
 			if key == -1:
 				if self.player.update():
 					self.current_pos = 0
-					self.scroller = None
 					self.update_track()
-
-				if self.autoscrolling:
+				elif self.autoscroll:
 					# auto scroll
-					if self.scroller is None:
-						self.scroller = Scroller(self.player.track.duration, self.player.track.length)
-					self.autoscroll()
+					pass
 					
 			if self.player.running:
 				self.input_key(key)

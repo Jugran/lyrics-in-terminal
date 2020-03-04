@@ -10,17 +10,19 @@ class Track:
                  artist=None,
                  title=None,
                  align=1,
-                 width=0):
+                 width=0,
+                 height=0):
 
         self.title = title
         self.artist = artist
         self.alignment = align
         self.width = width
+        self.height = height
         self.length = 0
         self.lyrics = None
         self.album = None
         self.trackid = None
-        self.duration = -1
+        self.art_url = None
 
     def __str__(self):
         return self.artist + ' - ' + self.title
@@ -38,12 +40,12 @@ class Track:
 
         return trackinfo
 
-    def update(self, artist, title, album, trackid, duration):
+    def update(self, artist, title, album, trackid, art_url):
         self.artist = artist
         self.title = title
         self.album = album
         self.trackid = trackid
-        self.duration = duration
+        self.art_url = art_url
         self.get_lyrics()
 
     def get_lyrics(self, cache=True, source='google'):
