@@ -40,7 +40,7 @@ class Window:
 		# track_info -> ['title', 'artist', 'album'] - all algined
 		self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
 		self.stdscr.addstr(1, 1, track_info[1], curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
-		self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE | curses.A_ITALIC)
+		self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE)
 		
 	def set_offset(self):
 		if self.player.track.alignment == 0:
