@@ -43,7 +43,7 @@ class Player:
                 title = self.metadata['xesam:title']
                 artist = self.metadata['xesam:artist'][0]
                 album = self.metadata['xesam:album']
-                arturl = self.metadata['mpris:artUrl']
+                # arturl = self.metadata['mpris:artUrl']
                 trackid = self.metadata['mpris:trackid']
             except (IndexError, KeyError) as e:
                 self.running = False
@@ -53,13 +53,13 @@ class Player:
                 self.running = False
             elif self.track.trackid != trackid or self.track.title != title:
                 #update
-                self.track.update(artist, title, album, trackid, arturl)
+                self.track.update(artist, title, album, trackid)
                 return True
 
         return False
 
     def refresh(self, source='az'):
-        self.track.refresh_lyrics(source=source)
+        self.track.get_lyrics(cache=False, source=source)
 
     def next(self):
         pass

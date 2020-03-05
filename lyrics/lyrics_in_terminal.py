@@ -6,6 +6,7 @@ from .player import Player
 import curses
 import sys
 
+
 class Window:
 	def __init__(self, stdscr, player, timeout=1500):
 		self.stdscr = stdscr
@@ -36,7 +37,6 @@ class Window:
 
 	def set_titlebar(self):
 		track_info = self.player.track.track_info(self.width - 1)
-
 		# track_info -> ['title', 'artist', 'album'] - all algined
 		self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
 		self.stdscr.addstr(1, 1, track_info[1], curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
@@ -51,15 +51,15 @@ class Window:
 		else:
 			self.pad_offset = (self.width - self.player.track.width) - 2
 	
-	def scroll_up(self, step=1):
-		if self.current_pos <= self.player.track.length * 0.8:
+	def scroll_down(self, step=1):
+		if self.current_pos < self.player.track.length - (self.height * 0.5):
 			self.current_pos += step
 		else:
 			self.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
 
-	def scroll_down(self, step=1):
+	def scroll_up(self, step=1):
 		if self.current_pos > 0:
-			if self.current_pos >= self.player.track.length * 0.8:
+			if self.current_pos >= self.player.track.length - (self.height * 0.5):
 				self.stdscr.move(self.height - 1, 0)
 				self.stdscr.clrtoeol()
 			self.current_pos -= step
@@ -69,7 +69,7 @@ class Window:
 		self.scroll_pad.clear()
 
 		if self.player.track.width > self.width - self.text_padding:
-			text = self.player.track.wrapped(self.width - 2)
+			text = self.player.track.get_text(wrap=True, width=self.width - self.text_padding)
 		else:
 			text = self.player.track.get_text()
 
@@ -79,6 +79,45 @@ class Window:
 		self.scroll_pad.resize(pad_height, pad_width)
 		self.scroll_pad.addstr(text)
 		self.set_offset()
+
+	def input_key(self, key):
+		if key == curses.KEY_RESIZE:
+			self.update_track()
+		elif key == curses.KEY_DOWN:
+			self.scroll_down()
+		elif key == curses.KEY_RIGHT:
+			self.scroll_down(5)
+			self.stdscr.erase()
+		elif key == curses.KEY_UP:
+			self.scroll_up()
+		elif key == curses.KEY_LEFT:
+			self.scroll_up(5)
+			self.stdscr.erase()
+
+		elif key == ord('r'):
+			self.player.refresh('az')
+			self.current_pos = 0
+			self.update_track()
+		elif key == ord('R'):
+			self.player.refresh('google')
+			self.current_pos = 0
+			self.update_track()
+			
+		# keys to change alignment
+		# j = left | k = center | l = right
+		elif key == ord('j'):
+			self.player.track.alignment=1
+			self.update_track()
+		elif key == ord('k'):
+			self.player.track.alignment=0
+			self.update_track()
+		elif key == ord('l'):
+			self.player.track.alignment=2
+			self.update_track()
+
+		elif key == ord('d'):
+			if self.player.track.delete_lyrics():
+				self.stdscr.addstr(self.height - 1, self.width - 10, ' Deleted ', curses.A_REVERSE)
 
 	def main(self):
 		key = ''
@@ -92,44 +131,9 @@ class Window:
 				if self.player.update():
 					self.current_pos = 0
 					self.update_track()
-					
+
 			if self.player.running:
-				if key == curses.KEY_RESIZE:
-					self.update_track()
-				elif key == curses.KEY_DOWN:
-					self.scroll_up()
-				elif key == curses.KEY_RIGHT:
-					self.scroll_up(5)
-					self.stdscr.erase()
-				elif key == curses.KEY_UP:
-					self.scroll_down()
-				elif key == curses.KEY_LEFT:
-					self.scroll_down(5)
-					self.stdscr.erase()
-				elif key == ord('r'):
-					self.player.refresh('az')
-					self.current_pos = 0
-					self.update_track()
-				elif key == ord('R'):
-					self.player.refresh('google')
-					self.current_pos = 0
-					self.update_track()
-
-				# keys to change alignment
-				# j = left | k = center | l = right
-				elif key == ord('j'):
-					self.player.track.alignment=1
-					self.update_track()
-				elif key == ord('k'):
-					self.player.track.alignment=0
-					self.update_track()
-				elif key == ord('l'):
-					self.player.track.alignment=2
-					self.update_track()
-
-				elif key == ord('d'):
-					if self.player.track.delete_lyrics():
-						self.stdscr.addstr(self.height - 1, self.width - 10, ' Deleted ', curses.A_REVERSE)
+				self.input_key(key)
 
 				self.set_titlebar()
 				self.stdscr.refresh()
@@ -143,7 +147,7 @@ class Window:
 def main(stdscr, player_name, **kwargs):
 	player = Player(player_name, **kwargs)
 
-	win = Window(stdscr, player, timeout=2000)
+	win = Window(stdscr, player, timeout=1500)
 	#curses.cbreak()
 	# win.stdscr.timeout(1500)
 
@@ -161,3 +165,11 @@ def start(player_name=None):
 
 	curses.wrapper(main, player_name, align=1)
 
+
+if __name__ == '__main__':
+	if len(sys.argv) >= 2:
+		player_name=sys.argv[1].strip()
+	else:
+		player_name='spotify'
+
+	curses.wrapper(main, player_name, align=1)

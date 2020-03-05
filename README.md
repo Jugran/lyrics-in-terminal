@@ -45,7 +45,7 @@ Install from source
 ```sh
 git clone https://github.com/Jugran/lyrics-in-terminal.git
 cd lyrics-in-terminal
-python setup.py install --user
+pip install . --user
 ```
 
 ## Usage

@@ -7,8 +7,8 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
 	name='lyrics-in-terminal',
-	version='1.0',
-	description='Command Line Lyrics fetcher from mpris media player like Spotify, VLC',
+	version='1.0.1',
+	description='Command Line Lyrics fetcher from mpris media player like Spotify, VLC, Audacious',
 	author='Samarth Jugran',
 	author_email='jugransamarth@gmail.com',
 	license='MIT',

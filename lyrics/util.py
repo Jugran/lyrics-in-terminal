@@ -3,6 +3,7 @@
 
 from urllib.request import urlopen, Request
 from urllib.parse import quote
+from textwrap import wrap
 import os
 import re
 
@@ -17,7 +18,6 @@ CACHE_PATH = os.path.join(os.environ['HOME'], '.cache', 'lyrics')
 
 
 def query(track_name):
-
     return quote(track_name + ' lyrics')
 
 
@@ -36,10 +36,9 @@ def get_html(url, header=HEADER):
 
 
 def get_az_html(url):
-
     html = get_html(url.replace('lyrics', 'azlyrics'))
     if isinstance(html, tuple):
-        return html[0]
+        return html
 
     regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
     az_url = regex.search(html)
@@ -65,7 +64,7 @@ def get_azlyrics(url):
         # Az lyrics not found
         return 'Azlyrics missing...'
 
-    rep = {'&quot;': '\"', '&amp;': '&'}
+    rep = {'&quot;': '\"', '&amp;': '&', '\r' : ''}
 
     ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()  
     # ly = ly.replace('&quot;', '\"').replace('&amp;', '&')
@@ -77,7 +76,6 @@ def get_azlyrics(url):
 
 
 def fetch_lyrics(url):
-
     html = get_html(url)
     if isinstance(html, tuple):
         return html[0]
@@ -105,14 +103,13 @@ def fetch_lyrics(url):
 
     return lyrics_lines
 
-def get_lyrics(track_name, cache=True, source='google'):
-        # check save cache for lyrics
 
+def get_lyrics(track_name, cache=True, source='google'):
     filename = track_name.strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
     filepath = os.path.join(CACHE_PATH, filename)
 
-    if  not os.path.isdir(CACHE_PATH):
+    if not os.path.isdir(CACHE_PATH):
         os.makedirs(CACHE_PATH)
 
     if os.path.isfile(filepath) and cache:                
@@ -135,6 +132,7 @@ def get_lyrics(track_name, cache=True, source='google'):
 
     return lyrics_lines
 
+
 def delete_lyrics(track_name):
     filename = track_name.strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
@@ -155,3 +153,16 @@ def align(lines, width, alignment=1):
         return [line.center(width) for line in lines]
     else:
         return [line.rjust(width) for line in lines]
+
+
+def wrapText(text, width):
+    lines = []
+    for line in text:
+        if len(line) > width:
+            line = wrap(line, width=width)
+        if isinstance(line, list):
+            lines += line
+        else:
+            lines.append(line)
+
+    return lines

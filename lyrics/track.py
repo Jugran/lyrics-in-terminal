@@ -3,30 +3,24 @@
 
 import sys
 from . import util
-from textwrap import wrap
 
-ALIGNMENT = 0
 
 class Track:
     def __init__(self,
                  artist=None,
                  title=None,
                  align=1,
-                 width=0,
-                 height=0,
-                 hard_format=False):
+                 width=0):
 
         self.title = title
         self.artist = artist
         self.alignment = align
-        self.hard_format = hard_format
         self.width = width
-        self.height = height
         self.length = 0
         self.lyrics = None
         self.album = None
         self.trackid = None
-        self.art_url = None
+        # self.art_url = None
 
     def __str__(self):
         return self.artist + ' - ' + self.title
@@ -44,86 +38,31 @@ class Track:
 
         return trackinfo
 
-    def update(self, artist, title, album, trackid, art_url):
+    def update(self, artist, title, album, trackid):
         self.artist = artist
         self.title = title
         self.album = album
         self.trackid = trackid
-        self.art_url = art_url
+        # self.art_url = art_url
         self.get_lyrics()
 
-    def get_lyrics(self):
-        self.lyrics = util.get_lyrics(self.track_name)
-
-        if not self.hard_format:
-            self.width = len(max(self.lyrics, key=len))
-
-        self.length = len(self.lyrics)
-
-    def refresh_lyrics(self, source):
-        self.lyrics = util.get_lyrics(self.track_name, cache=False, source=source)
+    def get_lyrics(self, cache=True, source='google'):
+        self.lyrics = util.get_lyrics(self.track_name, cache=cache, source=source)
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
 
-    def align(self):
-        return util.align(self.lyrics, self.width, self.alignment)
+    def get_text(self, wrap=False, width=0):
+        if wrap:
+            lyrics=util.wrapText(self.lyrics, width)
+        else:
+            lyrics=self.lyrics
 
-    def format_lyrics(self):
-        # center lyrics vertically
-        if self.length < self.height and self.hard_format:
-            space = (self.height - self.length) // 2
-            padding = [''] * (space - 2)
-            self.lyrics = padding + self.lyrics + padding
+        self.width = len(max(lyrics, key=len))
+        self.length = len(lyrics)
 
-    def wrapped(self, width):
-        raw_lyrics = self.lyrics
-
-        lines = []
-        for line in self.lyrics:
-            if len(line) > width:
-                line = wrap(line, width=width)
-            if isinstance(line, list):
-                lines += line
-            else:
-                lines.append(line)
-
-        self.width = len(max(lines, key=len))
-        self.length = len(lines)
-
-        self.lyrics = lines
-        wrapped = self.get_text()
-        self.lyrics = raw_lyrics
-
-        return wrapped
-
-    def get_text(self):
-        self.format_lyrics()
-        lyrics = self.align()
-
-        self.width = len(max(self.lyrics, key=len))
-        self.length = len(self.lyrics)
+        lyrics = util.align(lyrics, self.width, self.alignment)
 
         return '\n'.join(line for line in lyrics)
 
     def delete_lyrics(self):
         return util.delete_lyrics(self.track_name)
-
-
-if __name__ == '__main__':
-
-    if len(sys.argv) >= 5:
-        artist = sys.argv[1].strip()
-        title = sys.argv[2].strip()
-        width = int(sys.argv[-2])
-        height = int(sys.argv[-1])
-
-        track = Track(artist, title, ALIGNMENT, width, height, True)
-        track.get_lyrics()
-
-        topline = [track.track_name, round(width * 0.8) * '-']
-        topline = '\n'.join(util.align(topline, width, ALIGNMENT))
-        print(topline, '\n' + track.get_text())
-
-    else:
-        print('No Track info provided, Exiting...')
-        exit
