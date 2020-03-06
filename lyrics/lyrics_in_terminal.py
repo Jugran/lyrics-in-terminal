@@ -12,7 +12,9 @@ class Window:
 		self.stdscr = stdscr
 		self.height, self.width = stdscr.getmaxyx()
 		self.player = player
-		self.scroll_pad = curses.newpad(self.player.track.length + 2, self.player.track.width + 2)
+		self.scroll_pad = curses.newpad(self.player.track.length + 2,\
+			self.player.track.width + 2)
+
 		self.current_pos = 0
 		self.pad_offset = 1
 		self.text_padding = 5
@@ -31,16 +33,19 @@ class Window:
 			self.update_track()
 			self.set_titlebar()
 			self.stdscr.refresh()
-			self.scroll_pad.refresh(self.current_pos, 0, 4, self.pad_offset, self.height - 2, self.width - 1)
+			self.scroll_pad.refresh(self.current_pos, 0, 4, \
+				self.pad_offset, self.height - 2, self.width - 1)
 		else:
-			 self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
+			 self.stdscr.addstr(0, 1, f'{self.player.player_name} \
+			 	is not running!')
 			 self.stdscr.refresh()
 
 	def set_titlebar(self):
 		track_info = self.player.track.track_info(self.width - 1)
 		# track_info -> ['title', 'artist', 'album'] - all algined
 		self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
-		self.stdscr.addstr(1, 1, track_info[1], curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
+		self.stdscr.addstr(1, 1, track_info[1], \
+			curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
 		self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE)
 		
 	def set_offset(self):
@@ -60,7 +65,8 @@ class Window:
 
 	def scroll_up(self, step=1):
 		if self.current_pos > 0:
-			if self.current_pos >= self.player.track.length - (self.height * 0.5):
+			if self.current_pos >= self.player.track.length - \
+				(self.height * 0.5):
 				self.stdscr.move(self.height - 1, 0)
 				self.stdscr.clrtoeol()
 			self.current_pos -= step
@@ -70,7 +76,8 @@ class Window:
 		self.scroll_pad.clear()
 
 		if self.player.track.width > self.width - self.text_padding:
-			text = self.player.track.get_text(True, self.width - 2)
+			text = self.player.track.get_text(wrap=True, \
+				width=self.width - self.text_padding)
 		else:
 			text = self.player.track.get_text()
 
@@ -118,7 +125,8 @@ class Window:
 
 		elif key == ord('d'):
 			if self.player.track.delete_lyrics():
-				self.stdscr.addstr(self.height - 1, self.width - 10, ' Deleted ', curses.A_REVERSE)
+				self.stdscr.addstr(self.height - 1, self.width - 10, \
+				 ' Deleted ', curses.A_REVERSE)
 
 	def main(self):
 		key = ''
@@ -141,10 +149,12 @@ class Window:
 
 				self.set_titlebar()
 				self.stdscr.refresh()
-				self.scroll_pad.refresh(self.current_pos, 0, 4, self.pad_offset, self.height - 2, self.width - 1)
+				self.scroll_pad.refresh(self.current_pos, 0, 4, \
+					self.pad_offset, self.height - 2, self.width - 1)
 			else:
 				self.stdscr.clear()
-				self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
+				self.stdscr.addstr(0, 1, f'{self.player.player_name} \
+					is not running!')
 				self.stdscr.refresh()
 
 

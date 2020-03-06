@@ -55,7 +55,7 @@ class Track:
 
     def get_text(self, wrap=False, width=0):
         if wrap:
-            lyrics=util.wrapText(self.lyrics, width)
+            lyrics=util.wrap_text(self.lyrics, width)
         else:
             lyrics=self.lyrics
 

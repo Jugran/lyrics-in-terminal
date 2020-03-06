@@ -155,7 +155,7 @@ def align(lines, width, alignment=1):
         return [line.rjust(width - 1) for line in lines]
 
 
-def wrapText(text, width):
+def wrap_text(text, width):
     lines = []
     for line in text:
         if len(line) > width:
