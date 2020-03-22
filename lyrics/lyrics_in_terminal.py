@@ -6,6 +6,8 @@ from .player import Player
 import curses
 import sys
 
+# BUG: when change alignment the text does not wrap to window
+#		-> re wrap when re align
 
 class Window:
 	def __init__(self, stdscr, player, timeout=1500):
@@ -107,12 +109,15 @@ class Window:
 		# j = left | k = center | l = right
 		elif key == ord('j'):
 			self.player.track.alignment=1
+			self.player.track.reset_width()
 			self.update_track()
 		elif key == ord('k'):
 			self.player.track.alignment=0
+			self.player.track.reset_width()
 			self.update_track()
 		elif key == ord('l'):
 			self.player.track.alignment=2
+			self.player.track.reset_width()
 			self.update_track()
 
 		elif key == ord('d'):

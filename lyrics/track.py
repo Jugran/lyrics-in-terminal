@@ -29,6 +29,9 @@ class Track:
     def track_name(self):
         return self.artist + ' - ' + self.title
 
+    def reset_width(self):
+        self.width = len(max(self.lyrics, key=len))
+
     def track_info(self, width):
         trackinfo = util.align([self.title, self.artist, self.album], width, self.alignment)
         
