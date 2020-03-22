@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import util
+from . import util
 
 
 class Track:
@@ -10,19 +10,16 @@ class Track:
                  artist=None,
                  title=None,
                  align=1,
-                 width=0,
-                 height=0):
+                 width=0):
 
         self.title = title
         self.artist = artist
         self.alignment = align
         self.width = width
-        self.height = height
         self.length = 0
         self.lyrics = None
         self.album = None
         self.trackid = None
-        self.art_url = None
 
     def __str__(self):
         return self.artist + ' - ' + self.title
@@ -30,6 +27,9 @@ class Track:
     @property
     def track_name(self):
         return self.artist + ' - ' + self.title
+
+    def reset_width(self):
+        self.width = len(max(self.lyrics, key=len))
 
     def track_info(self, width):
         trackinfo = util.align([self.title, self.artist, self.album], width, self.alignment)
