@@ -24,7 +24,7 @@ class Key:
 			window.scroll_up(5)
 			window.stdscr.erase()
 
-		elif key == self.binds['azLyrics']:
+		elif key == self.binds['azlyrics']:
 			window.player.refresh('az')
 			window.current_pos = 0
 			window.update_track()
@@ -34,7 +34,6 @@ class Key:
 			window.update_track()
 			
 		# keys to change alignment
-		# j = left | k = center | l = right
 		elif key == self.binds['left']:
 			window.player.track.alignment=1
 			window.player.track.reset_width()

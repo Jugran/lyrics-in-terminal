@@ -13,14 +13,13 @@ KEYS={
     'arrow_right': curses.KEY_RIGHT
 }
 
-CONFIG_PATH = os.path.join(os.environ['HOME'], '.config', 'lyrics', 'lyrics.cfg')
+CONFIG_PATH = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     def __init__(self, section):
         self.dict = {}
 
-        base = os.path.dirname
-        self.filepath = CONFIG_PATH
+        self.filepath = os.path.join(CONFIG_PATH, 'lyrics.cfg')
         self.section = section
 
         self.load()

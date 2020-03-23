@@ -6,8 +6,6 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-config_path = os.path.join(os.environ['HOME'], '.config', 'lyrics')
-
 setup(
 	name='lyrics-in-terminal',
 	version='1.1.0',
@@ -19,7 +17,6 @@ setup(
 	long_description_content_type='text/markdown',
 	url='https://github.com/Jugran/lyrics-in-terminal',
 	packages=find_packages(),
-	data_files=[(config_path, ['lyrics/lyrics.cfg']),],
 	entry_points={
 		'console_scripts': [
 			'lyrics = lyrics.lyrics_in_terminal:start'
@@ -33,5 +30,6 @@ setup(
     install_requires=[
     	'dbus-python'
     ],
-    python_requires='>=3.6'
+    python_requires='>=3.6',
+	include_package_data=True
 )

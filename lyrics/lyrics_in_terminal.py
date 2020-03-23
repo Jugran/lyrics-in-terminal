@@ -7,6 +7,7 @@ from .player import Player
 from .window import Window
 
 import sys
+import curses
 
 
 def main(stdscr, player_name, **kwargs):
