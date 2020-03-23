@@ -66,7 +66,7 @@ class Config:
                     # change to ascii
                     if len(value) == 1:
                         self.dict[key] = ord(value)
-
+    '''
     def save(self):
         config = ConfigParser()
         config.read(self.filepath)
@@ -74,3 +74,4 @@ class Config:
 
         with open(self.filepath, 'w') as file:
             config.write(file)
+    '''

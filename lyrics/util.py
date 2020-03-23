@@ -104,7 +104,7 @@ def fetch_lyrics(url):
     return lyrics_lines
 
 
-def get_lyrics(track_name, cache=True, source='google'):
+def get_lyrics(track_name, source, cache=True):
     filename = track_name.strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
     filepath = os.path.join(CACHE_PATH, filename)

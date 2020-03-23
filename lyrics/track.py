@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import sys
 from . import util
+import sys
 
 
 class Track:
@@ -40,16 +39,16 @@ class Track:
 
         return trackinfo
 
-    def update(self, artist, title, album, trackid, art_url):
+    def update(self, artist, title, album, trackid):
         self.artist = artist
         self.title = title
         self.album = album
         self.trackid = trackid
-        self.art_url = art_url
-        self.get_lyrics()
+        # self.art_url = art_url
+        # self.get_lyrics()
 
-    def get_lyrics(self, cache=True, source='google'):
-        self.lyrics = util.get_lyrics(self.track_name, cache=cache, source=source)
+    def get_lyrics(self, source, cache=True):
+        self.lyrics = util.get_lyrics(self.track_name, source, cache=cache)
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
 

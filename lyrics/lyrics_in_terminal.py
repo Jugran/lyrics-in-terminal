@@ -10,18 +10,13 @@ import sys
 import curses
 
 
-def main(stdscr, player_name, **kwargs):
-	player = Player(player_name, **kwargs)
-	win = Window(stdscr, player, timeout=1500)
-
-	win.main()
-
-def start():
+def main(stdscr):
 	defaults=Config('OPTIONS')
+
 	if len(sys.argv) >= 2:
 		player_name=sys.argv[1].strip()
 	else:
-		player_name=defaults['player']
+		player_name=defaults['player'].strip()
 
 	align = defaults['alignment']
 
@@ -31,8 +26,17 @@ def start():
 		align = 2
 	else:
 		align = 1
+	
+	interval = defaults['interval']
+	source = defaults['source']
 
-	curses.wrapper(main, player_name, align=align)
+	player = Player(player_name, source, align=align)
+	win = Window(stdscr, player, timeout=interval)
+
+	win.main()
+
+def start():
+	curses.wrapper(main)
 
 
 if __name__ == '__main__':

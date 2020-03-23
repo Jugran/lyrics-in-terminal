@@ -7,8 +7,10 @@ import dbus
 
 
 class Player:
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, source, **kwargs):
         self.player_name = name
+        self.default_source = source
+
         self.running = False
         self.metadata = None
         self.track = Track(**kwargs)
@@ -43,7 +45,7 @@ class Player:
                 title = self.metadata['xesam:title']
                 artist = self.metadata['xesam:artist'][0]
                 album = self.metadata['xesam:album']
-                arturl = self.metadata['mpris:artUrl']
+                # arturl = self.metadata['mpris:artUrl']
                 trackid = self.metadata['mpris:trackid']
             except (IndexError, KeyError) as e:
                 self.running = False
@@ -53,13 +55,14 @@ class Player:
                 self.running = False
             elif self.track.trackid != trackid or self.track.title != title:
                 #update
-                self.track.update(artist, title, album, trackid, arturl)
+                self.track.update(artist, title, album, trackid)
+                self.refresh(self.default_source)
                 return True
 
         return False
 
-    def refresh(self, source='az'):
-        self.track.get_lyrics(cache=False, source=source)
+    def refresh(self, source):
+        self.track.get_lyrics(source, cache=False)
 
     def next(self):
         pass

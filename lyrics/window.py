@@ -16,16 +16,16 @@ class Key:
 		elif key == self.binds['down']:
 			window.scroll_down()
 		elif key == self.binds['step-down']:
-			window.scroll_down(5)
+			window.scroll_down(self.binds['step-size'])
 			window.stdscr.erase()
 		elif key == self.binds['up']:
 			window.scroll_up()
 		elif key == self.binds['step-up']:
-			window.scroll_up(5)
+			window.scroll_up(self.binds['step-size'])
 			window.stdscr.erase()
 
 		elif key == self.binds['azlyrics']:
-			window.player.refresh('az')
+			window.player.refresh('azlyrics')
 			window.current_pos = 0
 			window.update_track()
 		elif key == self.binds['google']:
@@ -53,7 +53,7 @@ class Key:
 				 ' Deleted ', curses.A_REVERSE)
 
 class Window:
-	def __init__(self, stdscr, player, timeout=1500):
+	def __init__(self, stdscr, player, timeout):
 		self.stdscr = stdscr
 		self.height, self.width = stdscr.getmaxyx()
 		self.player = player
@@ -82,8 +82,7 @@ class Window:
 			self.scroll_pad.refresh(self.current_pos, 0, 4, \
 				self.pad_offset, self.height - 2, self.width - 1)
 		else:
-			 self.stdscr.addstr(0, 1, f'{self.player.player_name} \
-			 	is not running!')
+			 self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
 			 self.stdscr.refresh()
 
 	def set_titlebar(self):
@@ -101,7 +100,7 @@ class Window:
 		elif self.player.track.alignment == 1:
 			self.pad_offset = 2
 		else:
-			self.pad_offset = (self.width - self.player.track.width) - 2
+			self.pad_offset = (self.width - self.player.track.width)
 	
 	def scroll_down(self, step=1):
 		if self.current_pos < self.player.track.length - (self.height * 0.5):
@@ -156,6 +155,5 @@ class Window:
 					self.pad_offset, self.height - 2, self.width - 1)
 			else:
 				self.stdscr.clear()
-				self.stdscr.addstr(0, 1, f'{self.player.player_name} \
-					is not running!')
+				self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
 				self.stdscr.refresh()
