@@ -61,7 +61,7 @@ $ lyrics audacious
 $ lyrics rhythmbox
 ```
 
-### Keybindings
+### Default Keybindings
 
 | Action              | Keybinding    											|
 |:-------------------:|:-------------------------------------------------------:|
@@ -79,6 +79,49 @@ $ lyrics rhythmbox
 
 - Update Lyrics: Deletes local cached lyrics and fetches lyrics from the internet.
 - Delete Lyrics: Deletes local lyrics text file from ```~/.cache/lyrics/{trackname}```
+
+### Configuration
+
+Config file is located in ```~/.local/lib/python3.x/site-packages/lyrics/lyrics.cfg```
+
+<b>File Format</b>
+
+```
+# config structure
+[SECTION]
+option=value
+
+---------------------------------------------------------------
+
+#DEFAULT OPTIONS
+[OPTIONS]
+alignment=left
+source=google
+interval=1500
+player=spotify
+
+[BINDINGS]
+
+#scroll
+up=arrow_up
+down=arrow_down
+step-up=arrow_left
+step-down=arrow_right
+step-size=5
+
+#source switch key
+google=R
+azLyrics=r
+
+#text alignment
+left=j
+center=k
+right=l
+
+delete=d
+quit=q
+```
+
 
 License
 ----
