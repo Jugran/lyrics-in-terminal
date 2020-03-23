@@ -104,7 +104,7 @@ def fetch_lyrics(url):
     return lyrics_lines
 
 
-def get_lyrics(track_name, cache=True, source='google'):
+def get_lyrics(track_name, source, cache=True):
     filename = track_name.strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
     filepath = os.path.join(CACHE_PATH, filename)
@@ -152,10 +152,10 @@ def align(lines, width, alignment=1):
     elif alignment == 0:
         return [line.center(width) for line in lines]
     else:
-        return [line.rjust(width) for line in lines]
+        return [line.rjust(width - 1) for line in lines]
 
 
-def wrapText(text, width):
+def wrap_text(text, width):
     lines = []
     for line in text:
         if len(line) > width:

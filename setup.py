@@ -1,13 +1,14 @@
 from setuptools import setup, find_packages
-from os import path
+import os
 
-this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+this_directory = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
 	name='lyrics-in-terminal',
-	version='1.0.1',
+	version='1.1.0',
 	description='Command Line Lyrics fetcher from mpris media player like Spotify, VLC, Audacious',
 	author='Samarth Jugran',
 	author_email='jugransamarth@gmail.com',
@@ -30,5 +31,5 @@ setup(
     	'dbus-python'
     ],
     python_requires='>=3.6',
-    include_package_data=True
+	include_package_data=True
 )

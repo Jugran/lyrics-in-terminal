@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import sys
 from . import util
 
 
@@ -20,7 +18,6 @@ class Track:
         self.lyrics = None
         self.album = None
         self.trackid = None
-        # self.art_url = None
 
     def __str__(self):
         return self.artist + ' - ' + self.title
@@ -47,16 +44,16 @@ class Track:
         self.album = album
         self.trackid = trackid
         # self.art_url = art_url
-        self.get_lyrics()
+        # self.get_lyrics()
 
-    def get_lyrics(self, cache=True, source='google'):
-        self.lyrics = util.get_lyrics(self.track_name, cache=cache, source=source)
+    def get_lyrics(self, source, cache=True):
+        self.lyrics = util.get_lyrics(self.track_name, source, cache=cache)
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
 
     def get_text(self, wrap=False, width=0):
         if wrap:
-            lyrics=util.wrapText(self.lyrics, width)
+            lyrics=util.wrap_text(self.lyrics, width)
         else:
             lyrics=self.lyrics
 
