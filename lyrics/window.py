@@ -25,11 +25,11 @@ class Key:
 			window.stdscr.erase()
 
 		elif key == self.binds['azlyrics']:
-			window.player.refresh('azlyrics')
+			window.player.refresh('azlyrics', cache=False)
 			window.current_pos = 0
 			window.update_track()
 		elif key == self.binds['google']:
-			window.player.refresh('google')
+			window.player.refresh('google',cache=False)
 			window.current_pos = 0
 			window.update_track()
 			

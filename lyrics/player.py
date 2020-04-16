@@ -61,8 +61,8 @@ class Player:
 
         return False
 
-    def refresh(self, source):
-        self.track.get_lyrics(source, cache=False)
+    def refresh(self, source, cache=True):
+        self.track.get_lyrics(source, cache=cache)
 
     def next(self):
         pass
