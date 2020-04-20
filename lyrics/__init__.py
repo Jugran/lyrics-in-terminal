@@ -4,7 +4,7 @@ CACHE_PATH = Path.home().joinpath('.cache', 'lyrics')
 
 CONFIG_PATH = Path.home().joinpath('.config', 'lyrics-in-terminal','lyrics.cfg')
 
-__version__ = '1.2.0-dev1'
+__version__ = '1.2.1'
 
 if not CONFIG_PATH.exists():
     from shutil import copy
@@ -13,6 +13,7 @@ if not CONFIG_PATH.exists():
     dirname = Path(__file__).parent
     src = dirname.joinpath('lyrics.cfg')
 
-    os.makedirs(CONFIG_PATH.parent)
+    if not CONFIG_PATH.parent.exists():
+        os.makedirs(CONFIG_PATH.parent)
 
     copy(src, CONFIG_PATH)

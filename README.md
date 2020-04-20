@@ -48,6 +48,12 @@ cd lyrics-in-terminal
 pip install . --user
 ```
 
+## Updating
+> <b>Warning!</b>: if updating from version <= 1.1, please backup your custom config file as it will be overwritten.
+```sh
+pip install -U lyrics-in-terminal
+```
+
 ## Usage
 ```sh
 $ lyrics
@@ -75,6 +81,7 @@ $ lyrics rhythmbox
 | Update Lyrics<br>(from Azlyrics)    | <kbd>r</kbd>  |
 | Update Lyrics<br>(from Google)    | <kbd>R</kbd>  |
 | Delete lyrics file 		| <kbd>d</kbd> |
+| Show Help page        | <kbd>h</kbd> |
 | Quit Program        | <kbd>q</kbd>  |
 
 - Update Lyrics: Deletes local cached lyrics and fetches lyrics from the internet.
@@ -92,7 +99,6 @@ Config file is located in ```~/.config/lyrics-in-terminal/lyrics.cfg```
 option=value
 
 ---------------------------------------------------------------
-
 #DEFAULT OPTIONS
 [OPTIONS]
 alignment=left
@@ -101,7 +107,6 @@ interval=1500
 player=spotify
 
 [BINDINGS]
-
 #scroll
 up=arrow_up
 down=arrow_down
@@ -119,6 +124,7 @@ center=k
 right=l
 
 delete=d
+help=h
 quit=q
 ```
 
