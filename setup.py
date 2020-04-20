@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 import os
 
+from lyrics import __version__
+
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
@@ -8,7 +10,7 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
 	name='lyrics-in-terminal',
-	version='1.1.1',
+	version=__version__,
 	description='Command Line Lyrics fetcher from mpris media player like Spotify, VLC, Audacious',
 	author='Samarth Jugran',
 	author_email='jugransamarth@gmail.com',

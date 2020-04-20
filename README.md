@@ -82,7 +82,7 @@ $ lyrics rhythmbox
 
 ### Configuration
 
-Config file is located in ```~/.local/lib/python3.x/site-packages/lyrics/lyrics.cfg```
+Config file is located in ```~/.config/lyrics-in-terminal/lyrics.cfg```
 
 <b>File Format</b>
 

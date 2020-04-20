@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+from lyrics import CONFIG_PATH
 from configparser import ConfigParser
 
 import curses
-import os
 
 KEYS={
     'arrow_up': curses.KEY_UP,
@@ -13,13 +12,11 @@ KEYS={
     'arrow_right': curses.KEY_RIGHT
 }
 
-CONFIG_PATH = os.path.abspath(os.path.dirname(__file__))
-
 class Config:
     def __init__(self, section):
         self.dict = {}
 
-        self.filepath = os.path.join(CONFIG_PATH, 'lyrics.cfg')
+        self.filepath = CONFIG_PATH
         self.section = section
 
         self.load()

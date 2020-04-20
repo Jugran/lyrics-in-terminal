@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from .player import Player
-from .config import Config
+from lyrics.player import Player
+from lyrics.config import Config
 
 import curses
 

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-from .config import Config
-from .player import Player
-from .window import Window
+from lyrics.config import Config
+from lyrics.player import Player
+from lyrics.window import Window
 
 import sys
 import curses

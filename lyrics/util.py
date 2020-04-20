@@ -4,6 +4,8 @@
 from urllib.request import urlopen, Request
 from urllib.parse import quote
 from textwrap import wrap
+from lyrics import CACHE_PATH
+
 import os
 import re
 
@@ -14,7 +16,7 @@ HEADER = {'User-Agent': 'Mozilla/5.0'}
 CLASS_NAME = r'\w{5,7} \w{4,5} \w{5,7}'  # dependent on User-Agent 
 
 # location for cache
-CACHE_PATH = os.path.join(os.environ['HOME'], '.cache', 'lyrics')
+
 
 
 def query(track_name):
