@@ -6,6 +6,7 @@ from lyrics.config import Config
 
 import curses
 
+
 class Key:
 	def __init__(self):
 		self.binds = Config('BINDINGS')
@@ -49,21 +50,84 @@ class Key:
 
 		elif key == self.binds['delete']:
 			if window.player.track.delete_lyrics():
-				window.stdscr.addstr(window.height - 1, window.width - 10, \
-				 ' Deleted ', curses.A_REVERSE)
+				window.stdscr.addstr(window.height - 1, window.width - 10,
+							' Deleted ', curses.A_REVERSE)
+		elif key == self.binds['help']:
+			window.stdscr.erase()
+			HelpPage(self.binds)
+			window.height, window.width = window.stdscr.getmaxyx()
+
+
+class HelpPage:
+	def __init__(self, keybinds):
+		self.keybinds = keybinds
+		self.options = Config('OPTIONS')
+
+		self.win = curses.initscr()
+		self.win.box()
+		self.add_text()
+		self.main()
+
+	def add_config(self, i, j, config, _keys):
+		# invert keys
+		for k, v in config.items():
+			# set representable strings to ascii values
+			if v in _keys.keys():
+				v = _keys[v]
+			elif k != 'step-size' and k != 'interval':
+				if isinstance(v, int):
+					v = chr(v) # character values
+			self.win.addstr(i, j, f'{k:15} {v}')
+			# self.win.addstr(i, j, f'{k} \t {v}')
+			i += 1
+		return i
+
+	def add_text(self):
+		self.win.refresh()
+
+		h, w = self.win.getmaxyx()
+		self.win.addstr(3, 3, 'Help Page', curses.A_BOLD | curses.A_UNDERLINE)
+		self.win.addstr(h - 2, 3, f"{'Press any key to exit...':>{w-5}}")
+
+		keys = {  curses.KEY_UP : '↑',
+			curses.KEY_DOWN : '↓',
+			curses.KEY_LEFT: '←',
+			curses.KEY_RIGHT: '→',
+		}
+		# keybinds
+		i, j = 6, 3
+		self.win.addstr(i, j, 'Keybindings', curses.A_UNDERLINE)
+		i += 2
+		i = self.add_config(i, j, self.keybinds, keys)
+		# options
+		if w // 2 >= 30:
+			i, j = 6, w // 2 
+		else:
+			i += 2
+
+		self.win.addstr(i, j, 'Default Options', curses.A_UNDERLINE)
+		i+= 2
+		self.add_config(i, j, self.options, keys)
+
+	def main(self):
+		# wait for key input to exit
+		self.win.timeout(-1)
+		self.win.getch()
+
+		self.win.timeout(self.options['interval'])
+		self.win.erase()
+
 
 class Window:
 	def __init__(self, stdscr, player, timeout):
 		self.stdscr = stdscr
 		self.height, self.width = stdscr.getmaxyx()
 		self.player = player
-		self.scroll_pad = curses.newpad(self.player.track.length + 2,\
-			self.player.track.width + 2)
-
+		self.scroll_pad = curses.newpad(self.player.track.length + 2,
+					self.player.track.width + 2)
 		self.current_pos = 0
 		self.pad_offset = 1
 		self.text_padding = 5
-
 		self.keys = Key()
 
 		curses.use_default_colors()
@@ -79,8 +143,8 @@ class Window:
 			self.update_track()
 			self.set_titlebar()
 			self.stdscr.refresh()
-			self.scroll_pad.refresh(self.current_pos, 0, 4, \
-				self.pad_offset, self.height - 2, self.width - 1)
+			self.scroll_pad.refresh(self.current_pos, 0, 4, 
+					self.pad_offset, self.height - 2, self.width - 1)
 		else:
 			 self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
 			 self.stdscr.refresh()
@@ -89,8 +153,8 @@ class Window:
 		track_info = self.player.track.track_info(self.width - 1)
 		# track_info -> ['title', 'artist', 'album'] - all algined
 		self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
-		self.stdscr.addstr(1, 1, track_info[1], \
-			curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
+		self.stdscr.addstr(1, 1, track_info[1], 
+					curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
 		self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE)
 		
 	def set_offset(self):
@@ -121,8 +185,8 @@ class Window:
 		self.scroll_pad.clear()
 
 		if self.player.track.width > self.width - self.text_padding:
-			text = self.player.track.get_text(wrap=True, \
-				width=self.width - self.text_padding)
+			text = self.player.track.get_text(wrap=True, 
+						width=self.width - self.text_padding)
 		else:
 			text = self.player.track.get_text()
 
@@ -132,7 +196,7 @@ class Window:
 		self.scroll_pad.resize(pad_height, pad_width)
 		self.scroll_pad.addstr(text)
 		self.set_offset()	
-
+		
 	def main(self):
 		key = ''
 
@@ -151,8 +215,8 @@ class Window:
 
 				self.set_titlebar()
 				self.stdscr.refresh()
-				self.scroll_pad.refresh(self.current_pos, 0, 4, \
-					self.pad_offset, self.height - 2, self.width - 1)
+				self.scroll_pad.refresh(self.current_pos, 0, 4, 
+							self.pad_offset, self.height - 2, self.width - 1)
 			else:
 				self.stdscr.clear()
 				self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')

@@ -4,7 +4,7 @@ CACHE_PATH = Path.home().joinpath('.cache', 'lyrics')
 
 CONFIG_PATH = Path.home().joinpath('.config', 'lyrics-in-terminal','lyrics.cfg')
 
-__version__ = '1.2.0-dev'
+__version__ = '1.2.0-dev1'
 
 if not CONFIG_PATH.exists():
     from shutil import copy
