@@ -49,7 +49,11 @@ git clone https://github.com/Jugran/lyrics-in-terminal.git
 cd lyrics-in-terminal
 pip install . --user
 ```
-
+### From AUR 
+On Archlinux, [AUR](https://aur.archlinux.org/packages/lyrics-in-terminal/) package is made available and maintained by @Herbort11.
+```sh
+yay -S lyrics-in-terminal 
+```
 ## Updating
 > <b>Warning!</b>: if updating from version <= 1.1, please backup your custom config file as it will be overwritten.
 ```sh
