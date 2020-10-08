@@ -63,6 +63,10 @@ class Track:
         lyrics = util.align(lyrics, self.width, self.alignment)
 
         return '\n'.join(line for line in lyrics)
+    
+    def edit_lyrics(self):
+        util.edit_lyrics(self.track_name)
+
 
     def delete_lyrics(self):
         return util.delete_lyrics(self.track_name)

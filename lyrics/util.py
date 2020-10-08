@@ -6,17 +6,18 @@ from urllib.parse import quote
 from textwrap import wrap
 from lyrics import CACHE_PATH
 
+from subprocess import run
 import os
+import tempfile
 import re
 
 
 url = 'https://www.google.com/search?q='
 HEADER = {'User-Agent': 'Mozilla/5.0'}
 
-CLASS_NAME = r'\w{5,7} \w{4,5} \w{5,7}'  # dependent on User-Agent 
-
-# location for cache
-
+CLASS_NAME = r'\w{5,7} \w{4,5} \w{5,7}'  # dependent on User-Agent
+EDITOR = os.environ.get('EDITOR', 'nano')
+initial_text = b"Add lyrics here!"     # placeholder text for lyrics file
 
 
 def query(track_name):
@@ -59,16 +60,17 @@ def get_azlyrics(url):
     if isinstance(az_html, tuple):
         return az_html[0]
 
-    az_regex = re.compile(r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
+    az_regex = re.compile(
+        r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
 
     ly = az_regex.search(az_html)
     if ly == None:
         # Az lyrics not found
         return 'Azlyrics missing...'
 
-    rep = {'&quot;': '\"', '&amp;': '&', '\r' : ''}
+    rep = {'&quot;': '\"', '&amp;': '&', '\r': ''}
 
-    ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()  
+    ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()
     # ly = ly.replace('&quot;', '\"').replace('&amp;', '&')
     # regex = re.compile('|'.join(substrings))
     ly = re.sub('|'.join(rep.keys()), lambda match: rep[match.group(0)], ly)
@@ -82,7 +84,8 @@ def fetch_lyrics(url):
     if isinstance(html, tuple):
         return html[0]
 
-    html_regex = re.compile(r'<div class="{}">([^>]*?)</div>'.format(CLASS_NAME), re.S)
+    html_regex = re.compile(
+        r'<div class="{}">([^>]*?)</div>'.format(CLASS_NAME), re.S)
 
     text_list = html_regex.findall(html)
 
@@ -92,11 +95,11 @@ def fetch_lyrics(url):
     else:
         ly = []
         for l in text_list[1:]:
-            # lyrics must be multiline, 
+            # lyrics must be multiline,
             # ignore the artist info below lyrics
             if l.count('\n') > 2:
                 ly += l.split('\n')
-        if len(ly) < 5:  
+        if len(ly) < 5:
             # too short match for lyrics
             lyrics_lines = get_azlyrics(url)
         else:
@@ -106,15 +109,19 @@ def fetch_lyrics(url):
     return lyrics_lines
 
 
-def get_lyrics(track_name, source, cache=True):
+def get_filename(track_name):
     filename = track_name.strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
-    filepath = os.path.join(CACHE_PATH, filename)
+    return os.path.join(CACHE_PATH, filename)
+
+
+def get_lyrics(track_name, source, cache=True):
+    filepath = get_filename(track_name)
 
     if not os.path.isdir(CACHE_PATH):
         os.makedirs(CACHE_PATH)
 
-    if os.path.isfile(filepath) and cache:                
+    if os.path.isfile(filepath) and cache:
         # lyrics exist
         with open(filepath) as file:
             lyrics_lines = file.read().splitlines()
@@ -123,28 +130,47 @@ def get_lyrics(track_name, source, cache=True):
             lyrics_lines = fetch_lyrics(url + query(track_name))
         else:
             lyrics_lines = get_azlyrics(url + query(track_name))
-        
+
         if isinstance(lyrics_lines, str):
             return ['lyrics not found! :(', 'Issue is:', lyrics_lines]
 
-        text = map(lambda x : x.replace('&amp;', '&') + '\n', lyrics_lines)
-        
+        text = map(lambda x: x.replace('&amp;', '&') + '\n', lyrics_lines)
+
         with open(filepath, 'w') as file:
             file.writelines(text)
 
     return lyrics_lines
 
 
-def delete_lyrics(track_name):
-    filename = track_name.strip()
-    filename = re.sub(r'\s|\/|\\|\.', '', filename)
-    filepath = os.path.join(CACHE_PATH, filename)
+def edit_lyrics(track_name):
+    filepath = get_filename(track_name)
 
-    if os.path.isfile(filepath):                
+    if os.path.isfile(filepath):
+        # lyrics exist
+        # open text file
+        run([EDITOR, filepath], check=True)
+    else:
+        # open temp file
+        with tempfile.NamedTemporaryFile(prefix=track_name, suffix=".tmp") as tf:
+            tf.write(initial_text)
+            tf.flush()
+            run([EDITOR, tf.name])
+            tf.seek(0)
+            edited_lyrics = tf.read().decode('utf-8')
+        
+        with open(filepath, 'w') as file:
+            file.writelines(edited_lyrics)
+
+
+
+def delete_lyrics(track_name):
+    filepath = get_filename(track_name)
+
+    if os.path.isfile(filepath):
         # lyrics exist
         os.remove(filepath)
         return True
-    
+
     return False
 
 

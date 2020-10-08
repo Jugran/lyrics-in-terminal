@@ -56,7 +56,13 @@ class Key:
 			window.stdscr.erase()
 			HelpPage(self.binds)
 			window.height, window.width = window.stdscr.getmaxyx()
-
+		elif key == ord('e'):
+			curses.endwin()
+			window.player.track.edit_lyrics()
+			window.stdscr = curses.initscr()
+			window.current_pos = 0
+			window.player.refresh('google',cache=True)
+			window.update_track()
 
 class HelpPage:
 	def __init__(self, keybinds):
