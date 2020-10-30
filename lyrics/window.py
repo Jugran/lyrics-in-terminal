@@ -56,7 +56,7 @@ class Key:
 			window.stdscr.erase()
 			HelpPage(self.binds)
 			window.height, window.width = window.stdscr.getmaxyx()
-		elif key == ord('e'):
+		elif key == self.binds['edit']:
 			curses.endwin()
 			window.player.track.edit_lyrics()
 			window.stdscr = curses.initscr()

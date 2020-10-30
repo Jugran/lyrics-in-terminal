@@ -63,12 +63,3 @@ class Player:
 
     def refresh(self, source, cache=True):
         self.track.get_lyrics(source, cache=cache)
-
-    def next(self):
-        pass
-
-    def prev(self):
-        pass
-
-    def play_toggle(self):
-        pass

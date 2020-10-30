@@ -19,7 +19,7 @@ def ErrorHandler(func):
         except curses.error as err:
             print('Please increase terminal window size!')
         except:
-            print('Unexpected expetion occured.', sys.exc_info()[0])
+            print('Unexpected exception occurred.', sys.exc_info()[0])
 
     return wrapper
 
