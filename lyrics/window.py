@@ -9,9 +9,23 @@ import curses
 
 class Key:
 	def __init__(self):
+     """
+     Initialize the configuration.
+
+     Args:
+         self: (todo): write your description
+     """
 		self.binds = Config('BINDINGS')
 
 	def input(self, window, key):
+     """
+     Perform a window.
+
+     Args:
+         self: (todo): write your description
+         window: (todo): write your description
+         key: (str): write your description
+     """
 		if key == curses.KEY_RESIZE:
 			window.update_track()
 		elif key == self.binds['down']:
@@ -66,6 +80,13 @@ class Key:
 
 class HelpPage:
 	def __init__(self, keybinds):
+     """
+     Initialize keybinding
+
+     Args:
+         self: (todo): write your description
+         keybinds: (str): write your description
+     """
 		self.keybinds = keybinds
 		self.options = Config('OPTIONS')
 
@@ -75,6 +96,16 @@ class HelpPage:
 		self.main()
 
 	def add_config(self, i, j, config, _keys):
+     """
+     Add a new config } to the i }.
+
+     Args:
+         self: (todo): write your description
+         i: (todo): write your description
+         j: (todo): write your description
+         config: (dict): write your description
+         _keys: (str): write your description
+     """
 		# invert keys
 		for k, v in config.items():
 			# set representable strings to ascii values
@@ -89,6 +120,12 @@ class HelpPage:
 		return i
 
 	def add_text(self):
+     """
+     Add text
+
+     Args:
+         self: (todo): write your description
+     """
 		self.win.refresh()
 
 		h, w = self.win.getmaxyx()
@@ -116,6 +153,12 @@ class HelpPage:
 		self.add_config(i, j, self.options, keys)
 
 	def main(self):
+     """
+     Main function that runs.
+
+     Args:
+         self: (todo): write your description
+     """
 		# wait for key input to exit
 		self.win.timeout(-1)
 		self.win.getch()
@@ -126,6 +169,15 @@ class HelpPage:
 
 class Window:
 	def __init__(self, stdscr, player, timeout):
+     """
+     Initialize game.
+
+     Args:
+         self: (todo): write your description
+         stdscr: (todo): write your description
+         player: (todo): write your description
+         timeout: (int): write your description
+     """
 		self.stdscr = stdscr
 		self.height, self.width = stdscr.getmaxyx()
 		self.player = player
@@ -141,6 +193,12 @@ class Window:
 		self.set_up()
 
 	def set_up(self):
+     """
+     Set up the screen
+
+     Args:
+         self: (todo): write your description
+     """
 		self.stdscr.clear()
 		curses.curs_set(0)
 		self.current_pos = 0
@@ -156,6 +214,12 @@ class Window:
 			 self.stdscr.refresh()
 
 	def set_titlebar(self):
+     """
+     Set the title bar.
+
+     Args:
+         self: (todo): write your description
+     """
 		track_info = self.player.track.track_info(self.width - 1)
 		# track_info -> ['title', 'artist', 'album'] - all algined
 		self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
@@ -164,6 +228,12 @@ class Window:
 		self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE)
 		
 	def set_offset(self):
+     """
+     Sets the player.
+
+     Args:
+         self: (todo): write your description
+     """
 		if self.player.track.alignment == 0:
 				# center align
 			self.pad_offset = (self.width - self.player.track.width) // 2
@@ -173,12 +243,26 @@ class Window:
 			self.pad_offset = (self.width - self.player.track.width)
 	
 	def scroll_down(self, step=1):
+     """
+     Scroll the current game to the next game.
+
+     Args:
+         self: (todo): write your description
+         step: (int): write your description
+     """
 		if self.current_pos < self.player.track.length - (self.height * 0.5):
 			self.current_pos += step
 		else:
 			self.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
 
 	def scroll_up(self, step=1):
+     """
+     Scroll the current cursor.
+
+     Args:
+         self: (todo): write your description
+         step: (int): write your description
+     """
 		if self.current_pos > 0:
 			if self.current_pos >= self.player.track.length - \
 				(self.height * 0.5):
@@ -187,6 +271,12 @@ class Window:
 			self.current_pos -= step
 
 	def update_track(self):
+     """
+     Update the track of the track.
+
+     Args:
+         self: (todo): write your description
+     """
 		self.stdscr.clear()
 		self.scroll_pad.clear()
 
@@ -204,6 +294,12 @@ class Window:
 		self.set_offset()	
 		
 	def main(self):
+     """
+     Main function.
+
+     Args:
+         self: (todo): write your description
+     """
 		key = ''
 
 		while key != self.keys.binds['quit']:

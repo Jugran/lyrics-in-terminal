@@ -14,6 +14,13 @@ KEYS={
 
 class Config:
     def __init__(self, section):
+        """
+        Load configuration from configuration file.
+
+        Args:
+            self: (todo): write your description
+            section: (todo): write your description
+        """
         self.dict = {}
 
         self.filepath = CONFIG_PATH
@@ -23,21 +30,61 @@ class Config:
         self.set_constants()
 
     def __setitem__(self, key, value):
+        """
+        Sets the value of a key.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+            value: (str): write your description
+        """
         self.dict[key] = value
 
     def __getitem__(self, key):
+        """
+        Return the value of a dictionary.
+
+        Args:
+            self: (todo): write your description
+            key: (str): write your description
+        """
         return self.dict[key]
 
     def __contains__(self, key):
+        """
+        Determine if key contains a value.
+
+        Args:
+            self: (todo): write your description
+            key: (todo): write your description
+        """
         return key in self.dict
   
     def __repr__(self):
+        """
+        Return a repr representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         return self.dict.__repr__()
 
     def items(self):
+        """
+        Return a copy of this collection items.
+
+        Args:
+            self: (todo): write your description
+        """
         return [(k, v) for k,v in self.dict.items()]
 
     def load(self):
+        """
+        Load config file.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             config = ConfigParser()
             config.read(self.filepath)
@@ -51,6 +98,12 @@ class Config:
         self.dict = conf
 
     def set_constants(self):
+        """
+        Set constant constants.
+
+        Args:
+            self: (todo): write your description
+        """
         for key, value in self.dict.items():
             if value in KEYS.keys():
                 self.dict[key] = KEYS[value]

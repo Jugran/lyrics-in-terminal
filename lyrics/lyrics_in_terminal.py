@@ -11,7 +11,18 @@ import curses
 
 
 def ErrorHandler(func):
+    """
+    Decorator to log exceptions.
+
+    Args:
+        func: (callable): write your description
+    """
     def wrapper(*args, **kwargs):
+        """
+        Wraps a wrapper around the wrapped exceptions.
+
+        Args:
+        """
         try:
             curses.wrapper(func)
         except KeyboardInterrupt:
@@ -26,6 +37,12 @@ def ErrorHandler(func):
 
 @ErrorHandler
 def start(stdscr):
+    """
+    Starts a new game.
+
+    Args:
+        stdscr: (str): write your description
+    """
     defaults = Config('OPTIONS')
 
     if len(sys.argv) >= 2:

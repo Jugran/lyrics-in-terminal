@@ -15,20 +15,46 @@ class PostInstallConfigUpdate(install):
     """Post-installation for config update"""
 
     def run(self):
+        """
+        Run the build
+
+        Args:
+            self: (todo): write your description
+        """
         install.run(self)
         self.updateChanges()
 
     def getContents(self, filename):
+        """
+        Returns the contents of a file.
+
+        Args:
+            self: (todo): write your description
+            filename: (str): write your description
+        """
         with open(filename) as f:
             contents = f.read()
         return contents
 
     def getOptions(self, config):
+        """
+        Get all options that match the given config.
+
+        Args:
+            self: (todo): write your description
+            config: (todo): write your description
+        """
         regex = r'(\w+)=.*'
         options = re.findall(regex, config)
         return set(options)
 
     def updateChanges(self):
+        """
+        Updates the config file
+
+        Args:
+            self: (todo): write your description
+        """
 
         if CONFIG_PATH.exists():
             # check for changes

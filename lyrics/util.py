@@ -21,10 +21,24 @@ initial_text = b"Add lyrics here!"     # placeholder text for lyrics file
 
 
 def query(track_name):
+    """
+    Query the track_name.
+
+    Args:
+        track_name: (str): write your description
+    """
     return quote(track_name + ' lyrics')
 
 
 def get_html(url, header=HEADER):
+    """
+    Download html from url.
+
+    Args:
+        url: (str): write your description
+        header: (str): write your description
+        HEADER: (str): write your description
+    """
     try:
         req = Request(url, data=None, headers=header)
         req_url = urlopen(req)
@@ -39,6 +53,12 @@ def get_html(url, header=HEADER):
 
 
 def get_az_html(url):
+    """
+    Get azure azure url.
+
+    Args:
+        url: (str): write your description
+    """
     html = get_html(url.replace('lyrics', 'azlyrics'))
     if isinstance(html, tuple):
         return html
@@ -56,6 +76,12 @@ def get_az_html(url):
 
 
 def get_azlyrics(url):
+    """
+    Get azure url.
+
+    Args:
+        url: (str): write your description
+    """
     az_html = get_az_html(url)
     if isinstance(az_html, tuple):
         return az_html[0]
@@ -80,6 +106,12 @@ def get_azlyrics(url):
 
 
 def fetch_lyrics(url):
+    """
+    Fetch the given url.
+
+    Args:
+        url: (str): write your description
+    """
     html = get_html(url)
     if isinstance(html, tuple):
         return html[0]
@@ -110,12 +142,26 @@ def fetch_lyrics(url):
 
 
 def get_filename(track_name):
+    """
+    Get the filename of a track.
+
+    Args:
+        track_name: (str): write your description
+    """
     filename = track_name.strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
     return os.path.join(CACHE_PATH, filename)
 
 
 def get_lyrics(track_name, source, cache=True):
+    """
+    Retrieves the track_name for a track.
+
+    Args:
+        track_name: (str): write your description
+        source: (str): write your description
+        cache: (todo): write your description
+    """
     filepath = get_filename(track_name)
 
     if not os.path.isdir(CACHE_PATH):
@@ -143,6 +189,12 @@ def get_lyrics(track_name, source, cache=True):
 
 
 def edit_lyrics(track_name):
+    """
+    Edit track_name.
+
+    Args:
+        track_name: (str): write your description
+    """
     filepath = get_filename(track_name)
 
     if os.path.isfile(filepath):
@@ -164,6 +216,12 @@ def edit_lyrics(track_name):
 
 
 def delete_lyrics(track_name):
+    """
+    Delete a track_name from the track
+
+    Args:
+        track_name: (str): write your description
+    """
     filepath = get_filename(track_name)
 
     if os.path.isfile(filepath):
@@ -175,6 +233,14 @@ def delete_lyrics(track_name):
 
 
 def align(lines, width, alignment=1):
+    """
+    Aligns all lines in lines.
+
+    Args:
+        lines: (list): write your description
+        width: (int): write your description
+        alignment: (str): write your description
+    """
     if alignment == 1:
         return lines
     elif alignment == 0:
@@ -184,6 +250,13 @@ def align(lines, width, alignment=1):
 
 
 def wrap_text(text, width):
+    """
+    Wrap text in a list of lines.
+
+    Args:
+        text: (str): write your description
+        width: (int): write your description
+    """
     lines = []
     for line in text:
         if len(line) > width:

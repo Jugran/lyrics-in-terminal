@@ -8,6 +8,14 @@ import dbus
 
 class Player:
     def __init__(self, name, source, **kwargs):
+        """
+        Initialize the bus object.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+            source: (str): write your description
+        """
         self.player_name = name
         self.default_source = source
 
@@ -22,6 +30,12 @@ class Player:
         self.update()
 
     def get_bus(self):
+        """
+        Return bus object.
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             self.session_bus = dbus.SessionBus()
             self.player_bus = self.session_bus.get_object(f'org.mpris.MediaPlayer2.{self.player_name}', '/org/mpris/MediaPlayer2')
@@ -31,6 +45,12 @@ class Player:
             self.running = False
 
     def update(self):
+        """
+        Updates the song
+
+        Args:
+            self: (todo): write your description
+        """
         try:
             if not self.running:
                 self.get_bus()
@@ -62,4 +82,12 @@ class Player:
         return False
 
     def refresh(self, source, cache=True):
+        """
+        Refresh the cache.
+
+        Args:
+            self: (todo): write your description
+            source: (str): write your description
+            cache: (bool): write your description
+        """
         self.track.get_lyrics(source, cache=cache)
