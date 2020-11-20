@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/Jugran/lyrics-in-terminal.svg)](https://github.com/Jugran/lyrics-in-terminal/blob/master/LICENSE)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/lyrics-in-terminal.svg)](https://pypi.python.org/pypi/lyrics-in-terminal/)
 [![Downloads](https://pepy.tech/badge/lyrics-in-terminal)](https://pepy.tech/project/lyrics-in-terminal)
-[![Downloads](https://pepy.tech/badge/lyrics-in-terminal/month)](https://pepy.tech/project/lyrics-in-terminal/month)
+[![Downloads](https://pepy.tech/badge/lyrics-in-terminal/month)](https://pepy.tech/project/lyrics-in-terminal)
 
 Shows lyrics of songs from your favourite music player in terminal.
 
