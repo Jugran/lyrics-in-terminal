@@ -53,7 +53,26 @@ def start(stdscr):
 
 if __name__ == '__main__':
     if len(sys.argv) >= 2:
-        player_name = sys.argv[1].strip()
+        if sys.argv[1] == '-t':
+            try:
+                artist = sys.argv[2].strip()
+                title = sys.argv[3].strip()
+            except IndexError:
+                print('Please provide track info in format "-t {artist} {title}".')
+                exit(1)
+
+            from lyrics.track import Track
+
+            track = Track(artist=artist, title=title)
+            track.get_lyrics('google')
+
+            print(track.track_name)
+            print('-' * track.width, '\n')
+            print(track.get_text())
+
+            exit(0)
+        else:
+            player_name = sys.argv[1].strip()
     else:
         player_name = 'spotify'
 

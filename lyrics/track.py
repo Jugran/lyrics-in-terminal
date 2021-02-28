@@ -20,16 +20,25 @@ class Track:
         self.trackid = None
 
     def __str__(self):
+        ''' trackname in format "{artist} - {title}"
+        '''
         return self.artist + ' - ' + self.title
 
     @property
     def track_name(self):
+        ''' returns trackname in format "{artist} - {title}"
+        '''
         return self.artist + ' - ' + self.title
 
     def reset_width(self):
+        ''' reset track width (when track/lyrics is changed)
+        '''
         self.width = len(max(self.lyrics, key=len))
 
     def track_info(self, width):
+        ''' returns properly formated (3 lined, title, artist, album) track info for 
+            title 
+        '''
         trackinfo = util.align([self.title, self.artist, self.album], width, self.alignment)
         
         offset = self.alignment%2
@@ -39,6 +48,8 @@ class Track:
         return trackinfo
 
     def update(self, artist, title, album, trackid):
+        ''' update currently playing track info, (change track)
+        '''
         self.artist = artist
         self.title = title
         self.album = album
@@ -47,11 +58,15 @@ class Track:
         # self.get_lyrics()
 
     def get_lyrics(self, source, cache=True):
+        ''' fetch lyrics off the internet
+        '''
         self.lyrics = util.get_lyrics(self.track_name, source, cache=cache)
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
 
     def get_text(self, wrap=False, width=0):
+        ''' returns lyrics text seperated by '\\n'
+        '''
         if wrap:
             lyrics=util.wrap_text(self.lyrics, width)
         else:
@@ -65,8 +80,12 @@ class Track:
         return '\n'.join(line for line in lyrics)
     
     def edit_lyrics(self):
+        ''' open lyrics file in text editor present in CONFIG path
+        '''
         util.edit_lyrics(self.track_name)
 
 
     def delete_lyrics(self):
+        ''' delete lyrics file
+        '''
         return util.delete_lyrics(self.track_name)
