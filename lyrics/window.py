@@ -26,11 +26,11 @@ class Key:
 			window.stdscr.erase()
 
 		elif key == self.binds['azlyrics']:
-			window.player.refresh('azlyrics', cache=False)
+			window.player.refresh(source='azlyrics', cache=False)
 			window.current_pos = 0
 			window.update_track()
 		elif key == self.binds['google']:
-			window.player.refresh('google',cache=False)
+			window.player.refresh(source='google',cache=False)
 			window.current_pos = 0
 			window.update_track()
 			
@@ -61,7 +61,7 @@ class Key:
 			window.player.track.edit_lyrics()
 			window.stdscr = curses.initscr()
 			window.current_pos = 0
-			window.player.refresh('google',cache=True)
+			window.player.refresh(cache=True)
 			window.update_track()
 
 class HelpPage:

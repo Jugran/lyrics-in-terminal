@@ -56,10 +56,12 @@ class Player:
             elif self.track.trackid != trackid or self.track.title != title:
                 #update
                 self.track.update(artist, title, album, trackid)
-                self.refresh(self.default_source)
+                self.refresh()
                 return True
 
         return False
 
-    def refresh(self, source, cache=True):
+    def refresh(self, source=None, cache=True):
+        if source is None:
+            source = self.default_source
         self.track.get_lyrics(source, cache=cache)
