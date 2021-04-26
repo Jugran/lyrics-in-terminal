@@ -1,1 +1,2 @@
 include lyrics/lyrics.cfg
+include lyrics/detect-media.sh

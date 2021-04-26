@@ -77,4 +77,4 @@ if __name__ == '__main__':
         player_name = 'spotify'
 
     # curses.wrapper(main, player_name, align=1)
-    start(player_name, align=1)
+    start()

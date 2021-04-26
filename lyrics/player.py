@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from lyrics.track import Track
+import subprocess
+from pathlib import Path
 
 import dbus
 
 
 class Player:
     def __init__(self, name, source, **kwargs):
-        self.player_name = name
+        self.player_name = ''
         self.default_source = source
 
         self.running = False
@@ -24,16 +26,21 @@ class Player:
     def get_bus(self):
         try:
             self.session_bus = dbus.SessionBus()
-            self.player_bus = self.session_bus.get_object(f'org.mpris.MediaPlayer2.{self.player_name}', '/org/mpris/MediaPlayer2')
+            dirname = Path(__file__).parent
+            self.player_name = subprocess.check_output(dirname.joinpath('detect-media.sh')).decode('utf-8')
+            self.player_bus = self.session_bus.get_object(self.player_name, '/org/mpris/MediaPlayer2')
             self.player_interface = dbus.Interface(self.player_bus, 'org.freedesktop.DBus.Properties')
             self.running = True
+        except ValueError:
+            self.player_name = 'Media Player'
+            self.running = False
         except dbus.exceptions.DBusException:
             self.running = False
 
     def update(self):
         try:
-            if not self.running:
-                self.get_bus()
+            # if not self.running:
+            self.get_bus()
 
             self.metadata = self.player_interface.Get("org.mpris.MediaPlayer2.Player", "Metadata")
             self.running = True
@@ -44,7 +51,7 @@ class Player:
             try:
                 title = self.metadata['xesam:title']
                 artist = self.metadata['xesam:artist'][0]
-                album = self.metadata['xesam:album']
+                album = self.metadata.get('xesam:album')
                 # arturl = self.metadata['mpris:artUrl']
                 trackid = self.metadata['mpris:trackid']
             except (IndexError, KeyError) as e:
