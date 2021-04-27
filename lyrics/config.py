@@ -38,7 +38,7 @@ class Config:
         return [(k, v) for k,v in self.dict.items()]
     
     def getboolean(self, entry):
-         try:
+        try:
             config = ConfigParser()
             config.read(self.filepath)
             return config[self.section].getboolean(entry)

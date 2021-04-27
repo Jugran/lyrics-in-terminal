@@ -67,11 +67,13 @@ class Player:
 
         except dbus.exceptions.DBusException:
             self.running = False
+            self.player_interface = None
 
     def update(self):
-        if self.autoswitch:
-            self.check_playing()
         try:
+            if self.autoswitch:
+                self.check_playing()
+                
             if not self.running:
                 self.get_bus()
             # check if current player that was being tracking is playing or not
@@ -82,6 +84,7 @@ class Player:
             self.running = True
         except Exception as e:
             self.running = False
+            self.player_interface = None
 
         if self.running:
             try:
