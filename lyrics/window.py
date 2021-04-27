@@ -64,6 +64,12 @@ class Key:
 			window.player.refresh(cache=True)
 			window.update_track()
 
+		# autoswitch toggle
+		elif key == ord('a'):
+			window.player.player_name = Config('OPTIONS')['player'].strip()
+			window.player.running = False
+			window.player.autoswitch = not window.player.autoswitch
+
 class HelpPage:
 	def __init__(self, keybinds):
 		self.keybinds = keybinds

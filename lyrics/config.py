@@ -13,10 +13,10 @@ KEYS={
 }
 
 class Config:
-    def __init__(self, section):
+    def __init__(self, section, config_path=CONFIG_PATH):
         self.dict = {}
 
-        self.filepath = CONFIG_PATH
+        self.filepath = config_path
         self.section = section
 
         self.load()
@@ -36,6 +36,14 @@ class Config:
 
     def items(self):
         return [(k, v) for k,v in self.dict.items()]
+    
+    def getboolean(self, entry):
+         try:
+            config = ConfigParser()
+            config.read(self.filepath)
+            return config[self.section].getboolean(entry)
+        except Exception as e:
+            pass
 
     def load(self):
         try:

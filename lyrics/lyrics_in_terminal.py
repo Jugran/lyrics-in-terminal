@@ -34,6 +34,7 @@ def start(stdscr):
         player_name = defaults['player'].strip()
 
     align = defaults['alignment']
+    autoswitch = defaults.getboolean('autoswitch')
 
     if align == 'center':
         align = 0
@@ -45,7 +46,7 @@ def start(stdscr):
     interval = defaults['interval']
     source = defaults['source']
 
-    player = Player(player_name, source, align=align)
+    player = Player(player_name, source, autoswitch, align=align)
     win = Window(stdscr, player, timeout=interval)
 
     win.main()
@@ -71,10 +72,6 @@ if __name__ == '__main__':
             print(track.get_text())
 
             exit(0)
-        else:
-            player_name = sys.argv[1].strip()
     else:
-        player_name = 'spotify'
+        start()
 
-    # curses.wrapper(main, player_name, align=1)
-    start()
