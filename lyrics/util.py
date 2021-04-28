@@ -21,7 +21,8 @@ initial_text = b"Add lyrics here!"     # placeholder text for lyrics file
 
 
 def query(track_name):
-    return quote(track_name + ' lyrics')
+    track_name = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip()
+    return quote( track_name + ' lyrics')
 
 
 def get_html(url, header=HEADER):
@@ -110,12 +111,21 @@ def fetch_lyrics(url):
 
 
 def get_filename(track_name):
-    filename = track_name.strip()
+    '''returns name of cache file name from track name with correct format
+    '''
+    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip() # removing text in brackets [] ()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
     return os.path.join(CACHE_PATH, filename)
 
 
 def get_lyrics(track_name, source, cache=True):
+    ''' returns list of strings with lines of lyrics
+        also reads/write to cache file | if cache=True
+
+        track_name -> track name in format "artist - title"
+        source -> source to fetch lyrics from ('google' or 'azlyrics')
+        cache -> bool | whether to check lyrics from cache or not.
+    '''
     filepath = get_filename(track_name)
 
     if not os.path.isdir(CACHE_PATH):

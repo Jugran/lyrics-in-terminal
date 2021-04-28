@@ -44,7 +44,7 @@ class Player:
                 interface = dbus.Interface(obj, 'org.freedesktop.DBus.Properties')
                 status = interface.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
                 if status == 'Playing':
-                    self.player_name = service.split('.')[-1]
+                    self.player_name = service.split('MediaPlayer2.')[-1]
                     self.player_interface = interface
                     self.running = True
                     return
@@ -89,7 +89,8 @@ class Player:
         if self.running:
             try:
                 title = metadata['xesam:title']
-                
+                # title = re.sub(r'(\[.*\])', '', title).strip()
+
                 artist = metadata['xesam:artist']
                 artist = artist[0] if isinstance(artist, list) else artist
                 
@@ -97,6 +98,7 @@ class Player:
                 album = '' if album is None else album
                 # arturl = metadata['mpris:artUrl']
                 trackid = metadata.get('mpris:trackid')
+                trackid = title if trackid is None else trackid
             except (IndexError, KeyError) as e:
                 self.running = False
                 return False
