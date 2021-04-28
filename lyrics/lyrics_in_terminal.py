@@ -30,11 +30,12 @@ def start(stdscr):
 
     if len(sys.argv) >= 2:
         player_name = sys.argv[1].strip()
+        autoswitch = False
     else:
         player_name = defaults['player'].strip()
+        autoswitch = defaults.getboolean('autoswitch')
 
     align = defaults['alignment']
-    autoswitch = defaults.getboolean('autoswitch')
 
     if align == 'center':
         align = 0
