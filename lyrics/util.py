@@ -21,11 +21,15 @@ initial_text = b"Add lyrics here!"     # placeholder text for lyrics file
 
 
 def query(track_name):
+    '''encodes search query
+    '''
     track_name = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip()
     return quote( track_name + ' lyrics')
 
 
 def get_html(url, header=HEADER):
+    ''' returns html text from given url
+    '''
     try:
         req = Request(url, data=None, headers=header)
         req_url = urlopen(req)
@@ -40,6 +44,11 @@ def get_html(url, header=HEADER):
 
 
 def get_az_html(url):
+    ''' finds azlyrics website link and
+        returns html text from azlyrics
+
+        if azlyrics link not found returns error string
+    '''
     html = get_html(url.replace('lyrics', 'azlyrics'))
     if isinstance(html, tuple):
         return html
@@ -57,6 +66,11 @@ def get_az_html(url):
 
 
 def get_azlyrics(url):
+    ''' fetches lyrics from azlyrics
+        returns list if strings of lyrics
+
+        if lyrics not found returns error string
+    '''
     az_html = get_az_html(url)
     if isinstance(az_html, tuple):
         return az_html[0]
@@ -81,6 +95,14 @@ def get_azlyrics(url):
 
 
 def fetch_lyrics(url):
+    ''' fetches sources from google, then azlyrics 
+        checks if lyrics are valid 
+        
+        returns list of strings 
+
+        if lyrics not found in both google & azlyrics
+        returns string of error from get_azlyrics()
+    '''
     html = get_html(url)
     if isinstance(html, tuple):
         return html[0]
@@ -153,6 +175,12 @@ def get_lyrics(track_name, source, cache=True):
 
 
 def edit_lyrics(track_name):
+    ''' opens local lyrics file in $EDITOR to edit
+        if $EDITOR is not set, defaults to nano
+
+        if local lyrics file does not exists, 
+        then opens temp file
+    '''
     filepath = get_filename(track_name)
 
     if os.path.isfile(filepath):
@@ -167,13 +195,16 @@ def edit_lyrics(track_name):
             run([EDITOR, tf.name])
             tf.seek(0)
             edited_lyrics = tf.read().decode('utf-8')
-        
+        # save temp file as lyrics cache
         with open(filepath, 'w') as file:
             file.writelines(edited_lyrics)
 
 
 
 def delete_lyrics(track_name):
+    ''' deletes local lyrics cache file
+        returns -> bool | whether the delete operation occured or not
+    '''
     filepath = get_filename(track_name)
 
     if os.path.isfile(filepath):
@@ -185,6 +216,16 @@ def delete_lyrics(track_name):
 
 
 def align(lines, width, alignment=1):
+    ''' returns list of strings with text alignment
+
+        lines -> list of strings to align
+        width -> width of viewport
+        alignment -> integer [1 ,0 , n]
+
+        0 = center alignment
+        1 = left alignment (default)
+        n = right alignment
+    '''
     if alignment == 1:
         return lines
     elif alignment == 0:
@@ -194,6 +235,11 @@ def align(lines, width, alignment=1):
 
 
 def wrap_text(text, width):
+    ''' returns list of strings wrapped accross viewport
+
+        text -> list of strings to wrap
+        width -> width of viewport to fit text in
+    '''
     lines = []
     for line in text:
         if len(line) > width:
