@@ -65,7 +65,7 @@ class Key:
 			window.update_track()
 
 		# autoswitch toggle
-		elif key == ord('a'):
+		elif key == self.binds['autoswitchtoggle']:
 			window.player.player_name = Config('OPTIONS')['player'].strip()
 			window.player.running = False
 			window.player.autoswitch = not window.player.autoswitch
@@ -231,5 +231,5 @@ class Window:
 							self.pad_offset, self.height - 2, self.width - 1)
 			else:
 				self.stdscr.clear()
-				self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
+				self.stdscr.addstr(0, 1, f'{self.player.player_name} player is not running.')
 				self.stdscr.refresh()
