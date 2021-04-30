@@ -16,34 +16,38 @@ class PostInstallConfigUpdate(install):
 
     def run(self):
         install.run(self)
-        self.updateChanges()
+        self.updateConfigFile()
 
-    def getContents(self, filename):
-        with open(filename) as f:
-            contents = f.read()
-        return contents
-
-    def getOptions(self, config):
-        regex = r'(\w+)=.*'
-        options = re.findall(regex, config)
-        return set(options)
-
-    def updateChanges(self):
-
+    def updateConfigFile(self):
         if CONFIG_PATH.exists():
-            # check for changes
-            old_config = self.getContents(CONFIG_PATH)
-            new_config = self.getContents('lyrics/lyrics.cfg')
-            new_options = self.getOptions(new_config) - self.getOptions(old_config)
+            from configparser import ConfigParser
 
-            if len(new_options) == 0:
-                return
+            old_config = ConfigParser()
+            old_config.read(CONFIG_PATH)
 
-            with open(CONFIG_PATH, 'a') as file:
+            new_config = ConfigParser()
+            new_config.read('lyrics/lyrics.cfg')
+            
+            skip = True
+            
+            for section in old_config.sections():
+                old_keys = {o for o in old_config[section]}
+                new_keys = {n for n in new_config[section]}
+
+                new_options = new_keys - old_keys
+
+                if len(new_options) == 0:
+                    continue
+                else:
+                    skip = False
+                
                 for option in new_options:
-                    new_option = re.findall(fr'({option}=.*)', new_config)[0]
-                    file.write(new_option + '\n')
+                    old_config[section][option] = new_config[section][option]
 
+            if not skip:
+                with open(CONFIG_PATH, 'w') as file:
+                    old_config.write(file)
+        
 
 setup(
     name='lyrics-in-terminal',
