@@ -17,6 +17,8 @@ Almost all of the mpris specification compliant media players are supported, inc
 * Rhythmbox
 * Audacious
 
+> With version 1.4.1 and above, browser media detection is possible too.
+
 ## Wiki
 
 #### [Installation](https://github.com/Jugran/lyrics-in-terminal/wiki/Installation)
