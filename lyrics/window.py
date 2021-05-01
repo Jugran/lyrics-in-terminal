@@ -66,8 +66,6 @@ class Key:
 
 		# autoswitch toggle
 		elif key == self.binds['autoswitchtoggle']:
-			# window.player.player_name = Config('OPTIONS')['player'].strip()
-			window.player.running = False
 			window.player.autoswitch = not window.player.autoswitch
 			window.stdscr.addstr(window.height - 1, window.width - 18,
 			                     f" Autoswitch: {'on' if window.player.autoswitch else 'off'} ", curses.A_REVERSE)
@@ -91,7 +89,7 @@ class HelpPage:
 			elif k != 'step-size' and k != 'interval':
 				if isinstance(v, int):
 					v = chr(v) # character values
-			self.win.addstr(i, j, f'{k:15} {v}')
+			self.win.addstr(i, j, f'{k:18} {v}')
 			# self.win.addstr(i, j, f'{k} \t {v}')
 			i += 1
 		return i
