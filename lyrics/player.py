@@ -21,6 +21,9 @@ class Player:
         self.update()
 
     def check_playing(self):
+        ''' checks playing status of current player
+        '''
+
         if self.player_interface:
             status = self.player_interface.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
             self.running = (status == 'Playing')
@@ -37,12 +40,16 @@ class Player:
     #     return players
 
     def get_active_player(self):
+        ''' returns name of playing media source/player
+        '''
+
         session_bus = dbus.SessionBus()
         for service in session_bus.list_names():
             if re.findall(r'org.mpris.MediaPlayer2|plasma-browser-integration', service, re.IGNORECASE):
                 obj = session_bus.get_object(service, '/org/mpris/MediaPlayer2')
                 interface = dbus.Interface(obj, 'org.freedesktop.DBus.Properties')
                 status = interface.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus')
+
                 if status == 'Playing':
                     self.player_name = service.split('MediaPlayer2.')[-1]
                     self.player_interface = interface
@@ -51,12 +58,10 @@ class Player:
 
 
     def get_bus(self):
+        ''' gets dbus session bus and player interface
+        '''
+
         try:
-            # session_bus = dbus.SessionBus()
-            # dirname = Path(__file__).parent
-            # self.player_name = subprocess.check_output(dirname.joinpath('detect-media.sh')).decode('utf-8')
-            # player_bus = session_bus.get_object(self.player_name, '/org/mpris/MediaPlayer2')
-            # self.player_interface = dbus.Interface(player_bus, 'org.freedesktop.DBus.Properties')
             if self.autoswitch:
                 self.get_active_player()
             else:
@@ -70,15 +75,15 @@ class Player:
             self.player_interface = None
 
     def update(self):
+        ''' checks if player or track have changed or not
+        '''
+
         try:
             if self.autoswitch:
                 self.check_playing()
                 
             if not self.running:
                 self.get_bus()
-            # check if current player that was being tracking is playing or not
-            # if not the get playing media player
-            # if not found fallback to default media player
 
             metadata = self.player_interface.Get("org.mpris.MediaPlayer2.Player", "Metadata")
             self.running = True
@@ -89,8 +94,10 @@ class Player:
         if self.running:
             try:
                 title = metadata['xesam:title']
-                # title = re.sub(r'(\[.*\])', '', title).strip()
-
+                if title.strip() == '':
+                    # if Title is empty, don't update
+                    return False
+                
                 artist = metadata['xesam:artist']
                 artist = artist[0] if isinstance(artist, list) else artist
                 
@@ -102,11 +109,11 @@ class Player:
             except (IndexError, KeyError) as e:
                 self.running = False
                 return False
-
+            
             if trackid.find('spotify:ad') != -1:
                 self.running = False
             elif self.track.trackid != trackid or self.track.title != title:
-                #update
+                # update track
                 self.track.update(artist, title, album, trackid)
                 self.refresh()
                 return True
@@ -114,6 +121,11 @@ class Player:
         return False
 
     def refresh(self, source=None, cache=True):
+        ''' Re-fetches lyrics from procided source
+            source -> source name ('google' or 'azlyrics')
+            cache -> bool | wether to store cache file
+        '''
+        
         if source is None:
             source = self.default_source
         self.track.get_lyrics(source, cache=cache)

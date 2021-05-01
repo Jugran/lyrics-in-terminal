@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 import os
-import re
 
 from lyrics import __version__, CONFIG_PATH
 
