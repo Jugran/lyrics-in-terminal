@@ -97,8 +97,10 @@ class Player:
                 if title.strip() == '':
                     # if Title is empty, don't update
                     return False
-
-                artist = metadata['xesam:artist']
+                
+                artist=''
+                if 'xesam:artist' in metadata:
+                    artist = metadata['xesam:artist']
                 artist = artist[0] if isinstance(artist, list) else artist
 
                 if re.search('chromium|plasma', self.player_name) and '-' in title:
