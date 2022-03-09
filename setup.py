@@ -70,7 +70,7 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     install_requires=[
-        'dbus-python'
+        'dbus-next'
     ],
     python_requires='>=3.6',
     cmdclass={
