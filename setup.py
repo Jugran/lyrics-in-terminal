@@ -70,7 +70,8 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     install_requires=[
-        'dbus-python'
+        'dbus-python',
+        'python-mpd2'
     ],
     python_requires='>=3.6',
     cmdclass={

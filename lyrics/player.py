@@ -4,10 +4,10 @@ from lyrics.track import Track
 
 import dbus
 import re
-
+from mpd import MPDClient as mpd
 
 class Player:
-    def __init__(self, name, source, autoswitch, **kwargs):
+    def __init__(self, name, source, autoswitch, mpd_connect, **kwargs):
         self.player_name = name
         self.default_source = source
 
@@ -17,7 +17,9 @@ class Player:
         self.track = Track(**kwargs)
 
         self.player_interface = None
-
+        self.mpd_host = mpd_connect[0] or '127.0.0.1'
+        self.mpd_port = mpd_connect[1] or 6600
+        self.mpd_pass = mpd_connect[2] or ''
         self.update()
 
     def check_playing(self):
@@ -57,6 +59,33 @@ class Player:
                     return
 
 
+    def mpd_active(self):
+        """ Check if mpd is active and get metadata """
+        client = mpd()
+        try: client.connect(self.mpd_host,self.mpd_port)
+        except Exception as e:
+            print(e)
+        if self.mpd_pass != '':
+            client.password(self.mpd_pass)
+        if client.status()['state'] == 'play':
+            self.player_name = "mpd"
+            self.running2 = True
+            currentsong = client.currentsong()
+            if 'album' in currentsong: album = currentsong['album']
+            else: album = ''
+            title = currentsong['title']
+            title2 = currentsong['title']
+            artist = currentsong['artist']
+            album = album
+            trackid = currentsong['id']
+            if self.track.title != title:
+                self.track.update(artist, title, album, trackid)
+                self.refresh()
+                return True
+        else:
+            self.running2 = False        
+        return False
+    
     def get_bus(self):
         ''' gets dbus session bus and player interface
         '''
@@ -90,7 +119,8 @@ class Player:
         except Exception as e:
             self.running = False
             self.player_interface = None
-
+                
+        
         if self.running:
             try:
                 title = metadata['xesam:title']
@@ -126,7 +156,11 @@ class Player:
                 self.track.update(artist, title, album, trackid)
                 self.refresh()
                 return True
-
+                
+        if not self.running:
+            if self.mpd_active():
+                return True
+                
         return False
 
     def refresh(self, source=None, cache=True):

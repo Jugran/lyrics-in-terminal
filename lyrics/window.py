@@ -150,8 +150,14 @@ class Window:
 		self.stdscr.clear()
 		curses.curs_set(0)
 		self.current_pos = 0
-
+		
 		if self.player.running:
+			self.update_track()
+			self.set_titlebar()
+			self.stdscr.refresh()
+			self.scroll_pad.refresh(self.current_pos, 0, 4, 
+					self.pad_offset, self.height - 2, self.width - 1)
+		elif self.player.running2:
 			self.update_track()
 			self.set_titlebar()
 			self.stdscr.refresh()
@@ -229,6 +235,12 @@ class Window:
 				self.stdscr.refresh()
 				self.scroll_pad.refresh(self.current_pos, 0, 4, 
 							self.pad_offset, self.height - 2, self.width - 1)
+			elif self.player.running2:
+				self.keys.input(self, key)
+				self.set_titlebar()
+				self.stdscr.refresh()
+				self.scroll_pad.refresh(self.current_pos, 0, 4, 
+						self.pad_offset, self.height - 2, self.width - 1)
 			else:
 				self.stdscr.clear()
 				self.stdscr.addstr(0, 1, f'{self.player.player_name} player is not running.')
