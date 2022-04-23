@@ -16,6 +16,7 @@ Almost all of the mpris specification compliant media players are supported, inc
 * VLC Media player
 * Rhythmbox
 * Audacious
+* Music Player Daemon (MPD)
 
 > With version 1.4.1 and above, browser media detection is also possible.
 
