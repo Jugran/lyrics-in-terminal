@@ -157,15 +157,9 @@ class Window:
 			self.stdscr.refresh()
 			self.scroll_pad.refresh(self.current_pos, 0, 4, 
 					self.pad_offset, self.height - 2, self.width - 1)
-		elif self.player.running2:
-			self.update_track()
-			self.set_titlebar()
-			self.stdscr.refresh()
-			self.scroll_pad.refresh(self.current_pos, 0, 4, 
-					self.pad_offset, self.height - 2, self.width - 1)
 		else:
-			 self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
-			 self.stdscr.refresh()
+			self.stdscr.addstr(0, 1, f'{self.player.player_name} is not running!')
+			self.stdscr.refresh()
 
 	def set_titlebar(self):
 		track_info = self.player.track.track_info(self.width - 1)
@@ -235,12 +229,6 @@ class Window:
 				self.stdscr.refresh()
 				self.scroll_pad.refresh(self.current_pos, 0, 4, 
 							self.pad_offset, self.height - 2, self.width - 1)
-			elif self.player.running2:
-				self.keys.input(self, key)
-				self.set_titlebar()
-				self.stdscr.refresh()
-				self.scroll_pad.refresh(self.current_pos, 0, 4, 
-						self.pad_offset, self.height - 2, self.width - 1)
 			else:
 				self.stdscr.clear()
 				self.stdscr.addstr(0, 1, f'{self.player.player_name} player is not running.')
