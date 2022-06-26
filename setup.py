@@ -26,9 +26,9 @@ class PostInstallConfigUpdate(install):
 
             new_config = ConfigParser()
             new_config.read('lyrics/lyrics.cfg')
-            
+
             skip = True
-            
+
             for section in old_config.sections():
                 old_keys = {o for o in old_config[section]}
                 new_keys = {n for n in new_config[section]}
@@ -39,14 +39,14 @@ class PostInstallConfigUpdate(install):
                     continue
                 else:
                     skip = False
-                
+
                 for option in new_options:
                     old_config[section][option] = new_config[section][option]
 
             if not skip:
                 with open(CONFIG_PATH, 'w') as file:
                     old_config.write(file)
-        
+
 
 setup(
     name='lyrics-in-terminal',
@@ -61,7 +61,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'lyrics = lyrics.lyrics_in_terminal:start'
+            'lyrics = lyrics.lyrics_in_terminal:main'
         ]
     },
     classifiers=[
