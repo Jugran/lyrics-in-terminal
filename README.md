@@ -20,7 +20,7 @@ Almost all of the mpris specification compliant media players are supported, inc
 
 > With version 1.4.1 and above, browser media detection is also possible.
 
-> For MPD player support install mpd extras: pip install lyrics-in-terminal[mpd]
+> For MPD player support install `python-mpd2` package as well.
 
 ## Wiki
 
