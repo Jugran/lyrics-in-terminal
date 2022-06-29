@@ -25,7 +25,7 @@ def ErrorHandler(func):
 
 
 @ErrorHandler
-def start(stdscr):
+def init_pager(stdscr):
     defaults = Config('OPTIONS')
 
     if len(sys.argv) >= 2:
@@ -62,7 +62,8 @@ def main():
                 artist = sys.argv[2].strip()
                 title = sys.argv[3].strip()
             except IndexError:
-                print('Please provide track info in format "-t {artist} {title}".')
+                print(
+                    'Please provide track info in format "-t {artist} {title}".')
                 exit(1)
 
             from lyrics.track import Track
@@ -76,7 +77,7 @@ def main():
 
             exit(0)
     else:
-        start()
+        init_pager()
 
 if __name__ == "__main__":
     main()

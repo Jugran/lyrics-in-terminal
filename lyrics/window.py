@@ -3,6 +3,7 @@
 
 from lyrics.player import Player
 from lyrics.config import Config
+from lyrics import __version__
 
 import curses
 
@@ -86,7 +87,7 @@ class HelpPage:
 			# set representable strings to ascii values
 			if v in _keys.keys():
 				v = _keys[v]
-			elif k != 'step-size' and k != 'interval':
+			elif k not in ['step-size', 'interval', 'mpd_port']:
 				if isinstance(v, int):
 					v = chr(v) # character values
 			self.win.addstr(i, j, f'{k:18} {v}')
@@ -98,6 +99,7 @@ class HelpPage:
 		self.win.refresh()
 
 		h, w = self.win.getmaxyx()
+		self.win.addstr(2, 3, f"{'v' + __version__:>{w-5}}")
 		self.win.addstr(3, 3, 'Help Page', curses.A_BOLD | curses.A_UNDERLINE)
 		self.win.addstr(h - 2, 3, f"{'Press any key to exit...':>{w-5}}")
 
