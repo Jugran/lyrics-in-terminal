@@ -18,8 +18,8 @@ def ErrorHandler(func):
             pass
         except curses.error as err:
             print('Please increase terminal window size!')
-        except:
-            print('Unexpected exception occurred.', sys.exc_info())
+        except Exception as err:
+            print('Unexpected exception occurred.', sys.exc_info(), err)
 
     return wrapper
 
@@ -31,6 +31,7 @@ def start(stdscr):
     if len(sys.argv) >= 2:
         player_name = sys.argv[1].strip()
         autoswitch = False
+
     else:
         player_name = defaults['player'].strip()
         autoswitch = defaults.getboolean('autoswitch')
@@ -46,14 +47,15 @@ def start(stdscr):
 
     interval = defaults['interval']
     source = defaults['source']
-    mpd_connect = [defaults['mpd_host'],defaults['mpd_port'],defaults['mpd_pass']]    
-    
+    mpd_connect = [defaults['mpd_host'], defaults['mpd_port'], defaults['mpd_pass']]
+
     player = Player(player_name, source, autoswitch, mpd_connect, align=align)
     win = Window(stdscr, player, timeout=interval)
 
     win.main()
 
-if __name__ == '__main__':
+
+def main():
     if len(sys.argv) >= 2:
         if sys.argv[1] == '-t':
             try:
@@ -76,3 +78,5 @@ if __name__ == '__main__':
     else:
         start()
 
+if __name__ == "__main__":
+    main()
