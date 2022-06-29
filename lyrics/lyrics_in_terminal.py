@@ -25,7 +25,7 @@ def ErrorHandler(func):
 
 
 @ErrorHandler
-def start(stdscr):
+def init_pager(stdscr):
     defaults = Config('OPTIONS')
 
     if len(sys.argv) >= 2:
@@ -53,6 +53,32 @@ def start(stdscr):
 
     win.main()
 
+
+def start():
+    if len(sys.argv) >= 2:
+        if sys.argv[1] == '-t':
+            try:
+                artist = sys.argv[2].strip()
+                title = sys.argv[3].strip()
+            except IndexError:
+                print(
+                    'Please provide track info in format "-t {artist} {title}".')
+                exit(1)
+
+            from lyrics.track import Track
+
+            track = Track(artist=artist, title=title)
+            track.get_lyrics('google')
+
+            print(track.track_name)
+            print('-' * track.width, '\n')
+            print(track.get_text())
+
+            exit(0)
+    else:
+        init_pager()
+
+
 if __name__ == '__main__':
     if len(sys.argv) >= 2:
         if sys.argv[1] == '-t':
@@ -60,7 +86,8 @@ if __name__ == '__main__':
                 artist = sys.argv[2].strip()
                 title = sys.argv[3].strip()
             except IndexError:
-                print('Please provide track info in format "-t {artist} {title}".')
+                print(
+                    'Please provide track info in format "-t {artist} {title}".')
                 exit(1)
 
             from lyrics.track import Track
@@ -75,4 +102,3 @@ if __name__ == '__main__':
             exit(0)
     else:
         start()
-
