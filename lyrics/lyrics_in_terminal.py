@@ -4,7 +4,7 @@
 
 from lyrics.config import Config
 from lyrics.player import Player
-from lyrics.window import Window
+from lyrics.display.window import Window
 
 import sys
 import curses
