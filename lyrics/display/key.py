@@ -8,6 +8,19 @@ class Key:
         self.binds = Config('BINDINGS')
 
     def input(self, window, key):
+        """
+        Process the input from the user interface and perform corresponding actions.
+
+        Args:
+            window (Window): The user interface window object.
+            key (int): The key code representing the user's input.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         if key == curses.KEY_RESIZE:
             window.update_track()
         elif key == self.binds['down']:

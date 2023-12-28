@@ -15,6 +15,18 @@ class HelpPage:
         self.main()
 
     def add_config(self, i, j, config, _keys):
+        """
+        Add a configuration section to the help page.
+
+        Parameters:
+            i (int): The starting row index for displaying the configuration section.
+            j (int): The starting column index for displaying the configuration section.
+            config (dict): The configuration to be added.
+            _keys (dict): The dictionary containing key-value mappings for keybinds.
+
+        Returns:
+            int: The updated row index after displaying the configuration.
+        """
         # invert keys
         for k, v in config.items():
             # set representable strings to ascii values
@@ -29,6 +41,15 @@ class HelpPage:
         return i
 
     def add_text(self):
+        """
+        Refreshes the window and adds help page text to it.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
         self.win.refresh()
 
         h, w = self.win.getmaxyx()
@@ -57,6 +78,15 @@ class HelpPage:
         self.add_config(i, j, self.options, keys)
 
     def main(self):
+        """
+        Wait for key input to exit the help page.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
         # wait for key input to exit
         self.win.timeout(-1)
         self.win.getch()
