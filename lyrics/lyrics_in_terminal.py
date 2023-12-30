@@ -3,7 +3,7 @@
 
 
 from lyrics.config import Config
-from lyrics.player import Player
+from lyrics.listener.player import Player
 from lyrics.display.window import Window
 
 import sys
