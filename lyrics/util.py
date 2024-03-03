@@ -13,7 +13,9 @@ import re
 
 
 url = 'https://www.google.com/search?q='
-HEADER = {'User-Agent': 'Mozilla/5.0'}
+HEADER = {
+    'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch'
+}
 
 CLASS_NAME = r'\w{5,7} \w{4,5} \w{5,7}'  # dependent on User-Agent
 EDITOR = os.environ.get('EDITOR', 'nano')
@@ -24,7 +26,7 @@ def query(track_name):
     '''encodes search query
     '''
     track_name = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip()
-    return quote( track_name + ' lyrics')
+    return quote(track_name + ' lyrics')
 
 
 def get_html(url, header=HEADER):
@@ -97,7 +99,7 @@ def get_azlyrics(url):
 def fetch_lyrics(url):
     ''' fetches sources from google, then azlyrics 
         checks if lyrics are valid 
-        
+
         returns list of strings 
 
         if lyrics not found in both google & azlyrics
@@ -135,7 +137,8 @@ def fetch_lyrics(url):
 def get_filename(track_name):
     '''returns name of cache file name from track name with correct format
     '''
-    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip() # removing text in brackets [] ()
+    # removing text in brackets [] ()
+    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip()
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
     return os.path.join(CACHE_PATH, filename)
 
@@ -198,7 +201,6 @@ def edit_lyrics(track_name):
         # save temp file as lyrics cache
         with open(filepath, 'w') as file:
             file.writelines(edited_lyrics)
-
 
 
 def delete_lyrics(track_name):
