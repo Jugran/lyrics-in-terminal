@@ -70,13 +70,14 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     install_requires=[
-        'dbus-python'
+        'dbus-python',
+        'requests'
     ],
     extras_require={
         'mpd': ['python-mpd2'],
         'full': ['python-mpd2']
     },
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     cmdclass={
         'install': PostInstallConfigUpdate
     },

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from urllib.request import urlopen, Request
 from urllib.parse import quote
 from textwrap import wrap
 from lyrics import CACHE_PATH
@@ -10,6 +9,7 @@ from subprocess import run
 import os
 import tempfile
 import re
+import requests
 
 
 url = 'https://www.google.com/search?q='
@@ -33,16 +33,12 @@ def get_html(url, header=HEADER):
     ''' returns html text from given url
     '''
     try:
-        req = Request(url, data=None, headers=header)
-        req_url = urlopen(req)
+        resp = requests.get(url, headers=header)
+        resp.raise_for_status()
     except Exception as e:
-        return 'Cannot connect to internet!', e
+        return 'Error:' + str(e), e
 
-    if req_url.code != 200:
-        print('invalid request')
-        exit(1)
-
-    return req_url.read().decode('utf-8')
+    return resp.text
 
 
 def get_az_html(url):
@@ -65,6 +61,48 @@ def get_az_html(url):
         az_url = az_url.group(1)
         az_html = get_html(az_url, header)
         return az_html
+
+
+def get_genius_lyrics(url):
+    ''' fetches lyrics from genius
+        returns list if strings of lyrics
+    '''
+    html = get_html(url)
+    if isinstance(html, tuple):
+        return html
+
+    regex = re.compile(r'(http[s]?://genius.com/(?!albums)(?:.*?))&amp')
+    gns_url = regex.search(html)
+
+    if gns_url == None:
+        return 'No Genius Lyrics Found!'
+
+    gns_url = gns_url.group(1)
+    gns_html = get_html(gns_url, header={})
+
+    if isinstance(gns_html, tuple):
+        return gns_html[0]
+
+    gns_regex = re.compile(
+        '<div data-lyrics-container="true" (?:.*?)(>.*?<)/div>', re.S)
+    ly = gns_regex.findall(gns_html)
+    if ly == None:
+        # Genius lyrics not found
+        return 'Genius lyrics missing...'
+
+    lyrics_lines = ''
+    for ly_section in ly:
+        ly_section = ly_section.replace('&#x27;', "'")
+        line_regex = re.compile(r'>([^<]+?)<', re.S)
+        lines = line_regex.findall(ly_section)
+        lyrics_lines += "\n".join(lines)
+
+    lyrics_lines = re.sub(r'\n{2,}', '\n', lyrics_lines)
+    lyrics_lines = lyrics_lines.replace('\n[', '\n\n[')
+
+    lyrics_lines = lyrics_lines.split('\n')
+
+    return lyrics_lines
 
 
 def get_azlyrics(url):
@@ -131,6 +169,8 @@ def fetch_lyrics(url):
             # format lyrics
             lyrics_lines = ly
 
+    if lyrics_lines == 'Azlyrics missing...':
+        lyrics_lines = get_genius_lyrics(url)
     return lyrics_lines
 
 
@@ -164,7 +204,7 @@ def get_lyrics(track_name, source, cache=True):
         if source == 'google':
             lyrics_lines = fetch_lyrics(url + query(track_name))
         else:
-            lyrics_lines = get_azlyrics(url + query(track_name))
+            lyrics_lines = get_genius_lyrics(url + query(track_name))
 
         if isinstance(lyrics_lines, str):
             return ['lyrics not found! :(', 'Issue is:', lyrics_lines]
