@@ -76,8 +76,8 @@ def main():
             print(track.get_text())
 
             exit(0)
-    else:
-        init_pager()
+        else:
+            init_pager()
 
 if __name__ == "__main__":
     main()
