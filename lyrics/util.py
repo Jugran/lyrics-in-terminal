@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from typing import List, Tuple
 from urllib.parse import quote
 from textwrap import wrap
 from lyrics import CACHE_PATH
@@ -29,66 +30,74 @@ def query(track_name):
     return quote(track_name + ' lyrics')
 
 
-def get_html(url, header=HEADER):
+def get_html(url, header=HEADER) -> str | Tuple[str, Exception]:
     ''' returns html text from given url
     '''
     try:
         resp = requests.get(url, headers=header)
         resp.raise_for_status()
     except Exception as e:
+        # TODO: add error logging to file
         return 'Error:' + str(e), e
 
     return resp.text
 
 
-def get_az_html(url):
+def get_az_html(html: str) -> str | None:
     ''' finds azlyrics website link and
         returns html text from azlyrics
 
-        if azlyrics link not found returns error string
+        if azlyrics link not found returns None
     '''
-    html = get_html(url.replace('lyrics', 'azlyrics'))
-    if isinstance(html, tuple):
-        return html
-
     regex = re.compile(r'(http[s]?://www.azlyrics.com/lyrics(?:.*?))&amp')
     az_url = regex.search(html)
 
     if az_url == None:
-        return 'No Lyrics Found!'
-    else:
-        header = {'User-Agent': 'Mozilla/5.0 Firefox/70.0'}
-        az_url = az_url.group(1)
-        az_html = get_html(az_url, header)
-        return az_html
+        return None
+
+    header = {'User-Agent': 'Mozilla/5.0 Firefox/70.0'}
+    az_url = az_url.group(1)
+    az_html = get_html(az_url, header)
+
+    if isinstance(az_html, tuple):
+        return None
+    return az_html
 
 
-def get_genius_lyrics(url):
-    ''' fetches lyrics from genius
-        returns list if strings of lyrics
+def get_genius_html(html: str) -> str | None:
+    ''' finds genius website link and
+        returns html text from genius
+
+        if genius link not found returns None
     '''
-    html = get_html(url)
-    if isinstance(html, tuple):
-        return html
-
     regex = re.compile(r'(http[s]?://genius.com/(?!albums)(?:.*?))&amp')
     gns_url = regex.search(html)
 
     if gns_url == None:
-        return 'No Genius Lyrics Found!'
+        return None
 
     gns_url = gns_url.group(1)
     gns_html = get_html(gns_url, header={})
 
     if isinstance(gns_html, tuple):
-        return gns_html[0]
+        return None
+    return gns_html
+
+
+def parse_genius(html: str | None) -> List[str] | None:
+    ''' parses lyrics from genius html
+        returns list if strings of lyrics or None if lyrics not found
+    '''
+    if html == None:
+        return None
 
     gns_regex = re.compile(
         '<div data-lyrics-container="true" (?:.*?)(>.*?<)/div>', re.S)
-    ly = gns_regex.findall(gns_html)
+    ly = gns_regex.findall(html)
+
     if ly == None:
         # Genius lyrics not found
-        return 'Genius lyrics missing...'
+        return None
 
     lyrics_lines = ''
     for ly_section in ly:
@@ -105,48 +114,39 @@ def get_genius_lyrics(url):
     return lyrics_lines
 
 
-def get_azlyrics(url):
-    ''' fetches lyrics from azlyrics
+def parse_azlyrics(html: str | None) -> List[str] | None:
+    ''' parses lyrics from azlyrics html
         returns list if strings of lyrics
 
         if lyrics not found returns error string
     '''
-    az_html = get_az_html(url)
-    if isinstance(az_html, tuple):
-        return az_html[0]
+    if html == None:
+        return None
 
     az_regex = re.compile(
         r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
 
-    ly = az_regex.search(az_html)
+    ly = az_regex.search(html)
     if ly == None:
         # Az lyrics not found
-        return 'Azlyrics missing...'
+        return None
 
-    rep = {'&quot;': '\"', '&amp;': '&', '\r': ''}
-
+    # remove stray html tags
     ly = re.sub(r'<[/]?\w*?>', '', ly.group(1)).strip()
-    # ly = ly.replace('&quot;', '\"').replace('&amp;', '&')
-    # regex = re.compile('|'.join(substrings))
-    ly = re.sub('|'.join(rep.keys()), lambda match: rep[match.group(0)], ly)
+
+    # replace html entities
+    rep = {'&quot;': '\"', '&amp;': '&', '\r': ''}
+    replace_patten = '|'.join(rep.keys())
+    ly = re.sub(replace_patten, lambda match: rep[match.group(0)], ly)
     lyrics_lines = ly.split('\n')
 
     return lyrics_lines
 
 
-def fetch_lyrics(url):
-    ''' fetches sources from google, then azlyrics 
-        checks if lyrics are valid 
-
-        returns list of strings 
-
-        if lyrics not found in both google & azlyrics
-        returns string of error from get_azlyrics()
+def parse_google(html: str) -> List[str] | None:
+    ''' parses google result html
+        returns list of strings or None if no lyrics found
     '''
-    html = get_html(url)
-    if isinstance(html, tuple):
-        return html[0]
-
     html_regex = re.compile(
         r'<div class="{}">([^>]*?)</div>'.format(CLASS_NAME), re.S)
 
@@ -154,23 +154,18 @@ def fetch_lyrics(url):
 
     if len(text_list) < 2:
         # No google result found!
-        lyrics_lines = get_azlyrics(url)
-    else:
-        ly = []
-        for l in text_list[1:]:
-            # lyrics must be multiline,
-            # ignore the artist info below lyrics
-            if l.count('\n') > 2:
-                ly += l.split('\n')
-        if len(ly) < 5:
-            # too short match for lyrics
-            lyrics_lines = get_azlyrics(url)
-        else:
-            # format lyrics
-            lyrics_lines = ly
+        return None
 
-    if lyrics_lines == 'Azlyrics missing...':
-        lyrics_lines = get_genius_lyrics(url)
+    lyrics_lines = []
+    for l in text_list[1:]:
+        # lyrics must be multiline,
+        # ignore the artist info below lyrics
+        if l.count('\n') > 2:
+            lyrics_lines += l.split('\n')
+    if len(lyrics_lines) < 5:
+        # too short match for lyrics
+        return None
+
     return lyrics_lines
 
 
@@ -183,12 +178,12 @@ def get_filename(track_name):
     return os.path.join(CACHE_PATH, filename)
 
 
-def get_lyrics(track_name, source, cache=True):
-    ''' returns list of strings with lines of lyrics
+def get_lyrics(track_name: str, source: str = 'any', cache: bool = True) -> Tuple[List[str], str | None]:
+    ''' returns tuple of list of strings with lines of lyrics and found source
         also reads/write to cache file | if cache=True
 
         track_name -> track name in format "artist - title"
-        source -> source to fetch lyrics from ('google' or 'azlyrics')
+        source -> source to fetch lyrics from ('google', 'azlyrics', 'genius', 'any')
         cache -> bool | whether to check lyrics from cache or not.
     '''
     filepath = get_filename(track_name)
@@ -196,25 +191,45 @@ def get_lyrics(track_name, source, cache=True):
     if not os.path.isdir(CACHE_PATH):
         os.makedirs(CACHE_PATH)
 
+    lyrics_lines = None
+    # If cache enabled, then return cached lyrics
     if os.path.isfile(filepath) and cache:
-        # lyrics exist
+        # cache lyrics exist
         with open(filepath) as file:
             lyrics_lines = file.read().splitlines()
-    else:
-        if source == 'google':
-            lyrics_lines = fetch_lyrics(url + query(track_name))
-        else:
-            lyrics_lines = get_genius_lyrics(url + query(track_name))
+        return lyrics_lines, 'cache'
 
-        if isinstance(lyrics_lines, str):
-            return ['lyrics not found! :(', 'Issue is:', lyrics_lines]
+    search_url = url + query(track_name)
+    html = get_html(search_url)
+    if isinstance(html, tuple):
+        err = html[0]
+        return [err], source
 
-        text = map(lambda x: x.replace('&amp;', '&') + '\n', lyrics_lines)
+    found_source = None
+    if source == 'google' or source == 'any':
+        lyrics_lines = parse_google(html)
+        found_source = 'google' if lyrics_lines is not None else None
 
-        with open(filepath, 'w') as file:
-            file.writelines(text)
+    if source == 'azlyrics' or (source == 'any' and lyrics_lines is None):
+        az_html = get_az_html(html)
+        lyrics_lines = parse_azlyrics(az_html)
+        found_source = 'azlyrics' if lyrics_lines is not None else None
 
-    return lyrics_lines
+    if source == 'genius' or (source == 'any' and lyrics_lines is None):
+        gns_html = get_genius_html(html)
+        lyrics_lines = parse_genius(gns_html)
+        found_source = 'genius' if lyrics_lines is not None else None
+
+    if lyrics_lines is None:
+        return ['lyrics not found! :( for', source], source
+
+    # TODO: replace all html entities with ASCII instead of just &amp;
+    text = map(lambda x: x.replace('&amp;', '&') + '\n', lyrics_lines)
+
+    with open(filepath, 'w') as file:
+        file.writelines(text)
+
+    return lyrics_lines, found_source or source
 
 
 def edit_lyrics(track_name):
