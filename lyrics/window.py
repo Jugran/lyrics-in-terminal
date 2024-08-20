@@ -26,14 +26,6 @@ class Key:
 			window.scroll_up(self.binds['step-size'])
 			window.stdscr.erase()
 
-		elif key == self.binds['azlyrics']:
-			window.player.refresh(source='azlyrics', cache=False)
-			window.current_pos = 0
-			window.update_track(True)
-		elif key == self.binds['google']:
-			window.player.refresh(source='google', cache=False)
-			window.current_pos = 0
-			window.update_track(True)
 		elif key == self.binds['cycle-source']:
 			window.player.refresh(cycle_source=True, cache=False)
 			window.current_pos = 0
