@@ -61,7 +61,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'lyrics = lyrics.lyrics_in_terminal:main'
+            'lyrics = lyrics.lyrics_in_terminal:main',
+            'lyt = lyrics.lyrics_in_terminal:main'
         ]
     },
     classifiers=[
