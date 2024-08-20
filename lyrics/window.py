@@ -198,6 +198,8 @@ class Window:
 			self.current_pos += step
 		else:
 			self.current_pos = self.player.track.length - 1
+			self.stdscr.move(self.height - 1, 0)
+			self.stdscr.clrtoeol()
 			self.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
 
 	def scroll_up(self, step=1):
