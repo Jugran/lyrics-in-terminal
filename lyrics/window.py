@@ -147,9 +147,10 @@ class Window:
 		self.text_padding = 5
 		self.keys = Key()
 		self.find_position = 0
+		self.timeout = timeout
 
 		curses.use_default_colors()
-		self.stdscr.timeout(timeout)
+		self.stdscr.timeout(self.timeout)
 		self.set_up()
 
 	def set_up(self):
@@ -177,11 +178,10 @@ class Window:
 
 	def set_statusbar(self):
 		if self.options['statusbar'] == 'on':
-			text = self.player.track.get_text(wrap=True, width=self.width - self.text_padding)
-			lines = text.split('\n')
+			lines = self.player.track.length
 			if self.current_pos < 0:
 				self.current_pos = 0
-			pct_progress = f' {int(self.current_pos * 100 / len(lines)) + 1}% '
+			pct_progress = f' {round(self.current_pos * 100 / lines) + 1}% '
 			self.stdscr.insstr(self.height - 1, self.width - len(pct_progress), pct_progress, curses.A_DIM)
 
 	def set_offset(self):
@@ -252,7 +252,8 @@ class Window:
 		curses.curs_set(1)
 
 		# (y, x, input max length), case-insensitive
-		find_string = self.stdscr.getstr(self.height - 1, len(prompt)+self.pad_offset, 100).decode(encoding="utf-8").strip()
+		find_string = self.stdscr.getstr(self.height - 1, len(prompt) + self.pad_offset, 100)
+		find_string = find_string.decode(encoding="utf-8").strip()
 
 		# hide cursor and key presses
 		curses.curs_set(0)
@@ -338,6 +339,7 @@ class Window:
 
 		# clear search line
 		self.stdscr.clear()
+		self.stdscr.timeout(self.timeout)
 
 	def update_track(self):
 		self.stdscr.clear()
