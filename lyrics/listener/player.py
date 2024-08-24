@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from lyrics.listener.dbus import DbusListener
 from lyrics.track import Track
 
 import dbus
@@ -15,7 +16,7 @@ except ImportError:
     pass
 
 
-class Player:
+class Player(DbusListener):
     def __init__(self, name, source, autoswitch, mpd_connect, **kwargs):
         self.player_name = name
         self.default_source = source
