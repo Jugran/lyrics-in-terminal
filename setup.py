@@ -32,20 +32,20 @@ class PostInstallConfigUpdate(install):
             for section in old_config.sections():
                 old_keys = {o for o in old_config[section]}
                 new_keys = {n for n in new_config[section]}
+                changes = new_keys ^ old_keys
 
-                new_options = new_keys - old_keys
-
-                if len(new_options) == 0:
+                if len(changes) == 0:
                     continue
                 else:
                     skip = False
 
-                for option in new_options:
-                    old_config[section][option] = new_config[section][option]
+                for option in new_keys:
+                    fallback = new_config[section].get(option)
+                    new_config[section][option] = old_config[section].get(option, fallback)
 
             if not skip:
                 with open(CONFIG_PATH, 'w') as file:
-                    old_config.write(file)
+                    new_config.write(file)
 
 
 setup(
@@ -71,13 +71,14 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     install_requires=[
-        'dbus-python'
+        'dbus-python',
+        'requests'
     ],
     extras_require={
         'mpd': ['python-mpd2'],
         'full': ['python-mpd2']
     },
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     cmdclass={
         'install': PostInstallConfigUpdate
     },

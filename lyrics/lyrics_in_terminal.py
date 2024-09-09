@@ -25,7 +25,7 @@ def ErrorHandler(func):
 
 
 @ErrorHandler
-def init_pager(stdscr):
+def init_pager(stdscr=None):
     defaults = Config('OPTIONS')
 
     if len(sys.argv) >= 2:

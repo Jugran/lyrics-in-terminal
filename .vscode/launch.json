@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/lyrics/lyrics_in_terminal.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/lyrics:${PYTHONPATH}"
+            },
+            "justMyCode": true
+        },
+    ]
+}
