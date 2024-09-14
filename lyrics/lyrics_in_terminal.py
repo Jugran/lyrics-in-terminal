@@ -27,7 +27,7 @@ def ErrorHandler(func):
 
 
 @ErrorHandler
-def init_pager(stdscr):
+def init_pager(stdscr=None):
     defaults = Config('OPTIONS')
 
     if len(sys.argv) >= 2:
@@ -49,7 +49,8 @@ def init_pager(stdscr):
 
     interval = defaults['interval']
     source = defaults['source']
-    mpd_connect = [defaults['mpd_host'], defaults['mpd_port'], defaults['mpd_pass']]
+    mpd_connect = [defaults['mpd_host'],
+                   defaults['mpd_port'], defaults['mpd_pass']]
 
     player = Player(player_name, source, autoswitch, mpd_connect, align=align)
     win = Window(stdscr, player, timeout=interval)
@@ -78,8 +79,9 @@ def main():
             print(track.get_text())
 
             exit(0)
-    else:
-        init_pager()
+
+    init_pager()
+
 
 if __name__ == "__main__":
     main()

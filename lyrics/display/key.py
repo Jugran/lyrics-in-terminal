@@ -43,6 +43,11 @@ class Key:
             window.current_pos = 0
             window.update_track()
 
+        elif key == self.binds['cycle-source']:
+            window.player.refresh(cycle_source=True, cache=False)
+            window.current_pos = 0
+            window.update_track(True)
+
         # keys to change alignment
         elif key == self.binds['left']:
             window.player.track.alignment = 1
@@ -59,7 +64,7 @@ class Key:
 
         elif key == self.binds['delete']:
             if window.player.track.delete_lyrics():
-                window.stdscr.addstr(window.height - 1, window.width - 10,
+                window.stdscr.addstr(window.height - 1, 1,
                                      ' Deleted ', curses.A_REVERSE)
         elif key == self.binds['help']:
             window.stdscr.erase()
@@ -73,8 +78,11 @@ class Key:
             window.player.refresh(cache=True)
             window.update_track()
 
+        elif key == self.binds['find']:
+            window.find()
+
         # autoswitch toggle
         elif key == self.binds['autoswitchtoggle']:
             window.player.autoswitch = not window.player.autoswitch
-            window.stdscr.addstr(window.height - 1, window.width - 18,
+            window.stdscr.addstr(window.height - 1, 1,
                                  f" Autoswitch: {'on' if window.player.autoswitch else 'off'} ", curses.A_REVERSE)

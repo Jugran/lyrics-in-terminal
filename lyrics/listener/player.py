@@ -186,12 +186,9 @@ class Player(DbusListener):
 
         return False
 
-    def refresh(self, source=None, cache=True):
+    def refresh(self, cycle_source=False, source=None, cache=True):
         ''' Re-fetches lyrics from procided source
             source -> source name ('google' or 'azlyrics')
             cache -> bool | wether to store cache file
         '''
-
-        if source is None:
-            source = self.default_source
-        self.track.get_lyrics(source, cache=cache)
+        self.track.get_lyrics(source, cycle_source, cache)
