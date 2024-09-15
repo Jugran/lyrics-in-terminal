@@ -72,7 +72,7 @@ def main():
             from lyrics.track import Track
 
             track = Track(artist=artist, title=title)
-            track.get_lyrics('google')
+            track.get_lyrics('any')
 
             print(track.track_name)
             print('-' * track.width, '\n')
