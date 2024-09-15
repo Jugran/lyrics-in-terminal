@@ -2,9 +2,9 @@ from pathlib import Path
 
 CACHE_PATH = Path.home().joinpath('.cache', 'lyrics')
 
-CONFIG_PATH = Path.home().joinpath('.config', 'lyrics-in-terminal','lyrics.cfg')
+CONFIG_PATH = Path.home().joinpath('.config', 'lyrics-in-terminal', 'lyrics.cfg')
 
-__version__ = '1.6.0'
+__version__ = '1.7.0'
 
 if not CONFIG_PATH.exists():
     from shutil import copy

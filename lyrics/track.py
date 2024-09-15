@@ -5,8 +5,8 @@ from lyrics import util
 
 class Track:
     def __init__(self,
-                 artist=None,
-                 title=None,
+                 artist='',
+                 title='',
                  align=1,
                  width=0):
 
@@ -15,9 +15,11 @@ class Track:
         self.alignment = align
         self.width = width
         self.length = 0
-        self.lyrics = None
+        self.lyrics = []
+        self.source = None
         self.album = None
         self.trackid = None
+        self.sources = ['google', 'azlyrics', 'genius']
 
     def __str__(self):
         ''' trackname in format "{artist} - {title}"
@@ -57,10 +59,21 @@ class Track:
         # self.art_url = art_url
         # self.get_lyrics()
 
-    def get_lyrics(self, source, cache=True):
+    def get_lyrics(self, source, cycle_source=False, cache=True):
         ''' fetch lyrics off the internet
         '''
-        self.lyrics = util.get_lyrics(self.track_name, source, cache=cache)
+        if self.source is None or self.source == 'cache':
+            self.source = source or self.sources[0]
+
+        if cycle_source:
+            curr_source = self.sources.index(self.source)
+            next_source = (curr_source + 1) % len(self.sources)
+            source = self.sources[next_source]
+            cache = False
+        else:
+            source = 'any'
+
+        self.lyrics, self.source = util.get_lyrics(self.track_name, source, cache=cache)
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
 

@@ -26,14 +26,10 @@ class Key:
 			window.scroll_up(self.binds['step-size'])
 			window.stdscr.erase()
 
-		elif key == self.binds['azlyrics']:
-			window.player.refresh(source='azlyrics', cache=False)
+		elif key == self.binds['cycle-source']:
+			window.player.refresh(cycle_source=True, cache=False)
 			window.current_pos = 0
-			window.update_track()
-		elif key == self.binds['google']:
-			window.player.refresh(source='google',cache=False)
-			window.current_pos = 0
-			window.update_track()
+			window.update_track(True)
 			
 		# keys to change alignment
 		elif key == self.binds['left']:
@@ -343,7 +339,7 @@ class Window:
 		self.stdscr.clear()
 		self.stdscr.timeout(self.timeout)
 
-	def update_track(self):
+	def update_track(self, show_source=False):
 		self.stdscr.clear()
 		self.scroll_pad.clear()
 
@@ -358,8 +354,12 @@ class Window:
 
 		self.scroll_pad.resize(pad_height, pad_width)
 		self.scroll_pad.addstr(text)
-		self.set_offset()	
-		
+		self.set_offset()
+
+		if show_source:
+			self.stdscr.addstr(self.height - 1, 1,
+                    f" Source: {self.player.track.source}", curses.A_REVERSE)
+
 	def main(self):
 		key = ''
 
