@@ -88,8 +88,5 @@ class HelpPage:
             None
         """
         # wait for key input to exit
-        self.win.timeout(-1)
         self.win.getch()
-
-        self.win.timeout(self.options['interval'])
         self.win.erase()

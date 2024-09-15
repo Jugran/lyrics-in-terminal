@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import curses
+import asyncio
+
 from lyrics.display.key import Key
 from lyrics.config import Config
-
-import curses
+from lyrics import Logger
 
 
 class Window:
-    def __init__(self, stdscr, player, timeout):
+    def __init__(self, controller, stdscr, timeout, track):
         self.options = Config('OPTIONS')
+        self.controller = controller
+        self.track = track
         self.stdscr = stdscr
         self.height, self.width = stdscr.getmaxyx()
-        self.player = player
-        self.scroll_pad = curses.newpad(self.player.track.length + 2,
-                                        self.player.track.width + 2)
+        self.scroll_pad = curses.newpad(self.track.length + 2,
+                                        self.track.width + 2)
         self.current_pos = 0
         self.pad_offset = 1
         self.text_padding = 5
         self.keys = Key()
         self.find_position = 0
-        self.timeout = timeout
-
-        curses.use_default_colors()
-        self.stdscr.timeout(self.timeout)
-        self.set_up()
+        self.timeout = -1
 
     def set_up(self):
         """
@@ -40,11 +39,12 @@ class Window:
         Returns:
             None
         """
+        Logger.info('Setting up window...')
         self.stdscr.clear()
         curses.curs_set(0)
         self.current_pos = 0
 
-        if self.player.running:
+        if self.controller.player.running:
             self.update_track()
             self.set_titlebar()
             self.stdscr.refresh()
@@ -52,7 +52,7 @@ class Window:
                                     self.pad_offset, self.height - 2, self.width - 1)
         else:
             self.stdscr.addstr(
-                0, 1, f'{self.player.player_name} is not running!')
+                0, 1, f'{self.controller.player.player_name} is not running!')
             self.stdscr.refresh()
 
     def set_titlebar(self):
@@ -66,7 +66,7 @@ class Window:
         Return:
             None.
         """
-        track_info = self.player.track.track_info(self.width - 1)
+        track_info = self.track.track_info(self.width - 1)
         # track_info -> ['title', 'artist', 'album'] - all algined
         self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
         self.stdscr.addstr(1, 1, track_info[1],
@@ -77,7 +77,7 @@ class Window:
         if self.options['statusbar'] != 'on':
             return
 
-        lines = self.player.track.length
+        lines = self.track.length if self.track.length > 0 else 1
         if self.current_pos < 0:
             self.current_pos = 0
         pct_progress = f' {
@@ -99,13 +99,13 @@ class Window:
         Return:
         - None
         """
-        if self.player.track.alignment == 0:
+        if self.track.alignment == 0:
             # center align
-            self.pad_offset = (self.width - self.player.track.width) // 2
-        elif self.player.track.alignment == 1:
+            self.pad_offset = (self.width - self.track.width) // 2
+        elif self.track.alignment == 1:
             self.pad_offset = 2
         else:
-            self.pad_offset = (self.width - self.player.track.width)
+            self.pad_offset = (self.width - self.track.width)
 
     def scroll_down(self, step=1):
         """
@@ -117,10 +117,10 @@ class Window:
         Returns:
             None
         """
-        if self.current_pos < self.player.track.length - step:
+        if self.current_pos < self.track.length - step:
             self.current_pos += step
         else:
-            self.current_pos = self.player.track.length - 1
+            self.current_pos = self.track.length - 1
             self.stdscr.move(self.height - 1, 0)
             self.stdscr.clrtoeol()
             self.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
@@ -136,7 +136,7 @@ class Window:
             None
         """
         if self.current_pos > 0:
-            if self.current_pos >= self.player.track.length - \
+            if self.current_pos >= self.track.length - \
                     (self.height * 0.5):
                 self.stdscr.move(self.height - 1, 0)
                 self.stdscr.clrtoeol()
@@ -196,7 +196,7 @@ class Window:
 
         if find_string:
             # use word wrap which covers both wrap/nowrap and ensures line count is accurate
-            text = self.player.track.get_text(
+            text = self.track.get_text(
                 wrap=True, width=self.width - self.text_padding)
             lines = text.split('\n')
 
@@ -299,15 +299,16 @@ class Window:
         """
         self.stdscr.clear()
         self.scroll_pad.clear()
+        self.current_pos = 0
 
-        if self.player.track.width > self.width - self.text_padding:
-            text = self.player.track.get_text(wrap=True,
-                                              width=self.width - self.text_padding)
+        if self.track.width > self.width - self.text_padding:
+            text = self.track.get_text(wrap=True,
+                                       width=self.width - self.text_padding)
         else:
-            text = self.player.track.get_text()
+            text = self.track.get_text()
 
-        pad_height = max(self.height, self.player.track.length) + 2
-        pad_width = max(self.width, self.player.track.width) + 2
+        pad_height = max(self.height, self.track.length) + 2
+        pad_width = max(self.width, self.track.width) + 2
 
         self.scroll_pad.resize(pad_height, pad_width)
         self.scroll_pad.addstr(text)
@@ -315,9 +316,16 @@ class Window:
 
         if show_source:
             self.stdscr.addstr(self.height - 1, 1,
-                    f" Source: {self.player.track.source}", curses.A_REVERSE)
+                               f" Source: {self.track.source}", curses.A_REVERSE)
 
-    def main(self):
+    def refresh_screen(self):
+        self.set_titlebar()
+        self.set_statusbar()
+        self.stdscr.refresh()
+        self.scroll_pad.refresh(self.current_pos, 0, 4,
+                                self.pad_offset, self.height - 2, self.width - 1)
+
+    async def main(self):
         """
         Main function that runs the display loop, listening for key inputs.
 
@@ -327,28 +335,28 @@ class Window:
         Returns:
             None
         """
+        curses.use_default_colors()
+        self.stdscr.timeout(self.timeout)
+        self.set_up()
+
+        Logger.info('Window main loop...')
         key = ''
 
         while key != self.keys.binds['quit']:
-            key = self.stdscr.getch()
 
             self.height, self.width = self.stdscr.getmaxyx()
 
-            if key == -1:
-                if self.player.update():
-                    self.current_pos = 0
-                    self.update_track()
+            key = await asyncio.to_thread(self.stdscr.getch)
+            Logger.debug(f'Key pressed: {key}')
 
-            if self.player.running:
+            if key == curses.ERR:
+                continue
+
+            if self.track.trackid is not None and self.controller.player.running:
                 self.keys.input(self, key)
-
-                self.set_titlebar()
-                self.set_statusbar()
-                self.stdscr.refresh()
-                self.scroll_pad.refresh(self.current_pos, 0, 4,
-                                        self.pad_offset, self.height - 2, self.width - 1)
+                self.refresh_screen()
             else:
                 self.stdscr.clear()
                 self.stdscr.addstr(
-                    0, 1, f'{self.player.player_name} player is not running.')
+                    0, 1, f'{self.controller.player.player_name} player is not running.')
                 self.stdscr.refresh()

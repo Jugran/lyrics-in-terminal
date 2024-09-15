@@ -34,15 +34,6 @@ class Key:
             window.scroll_up(self.binds['step-size'])
             window.stdscr.erase()
 
-        elif key == self.binds['azlyrics']:
-            window.player.refresh(source='azlyrics', cache=False)
-            window.current_pos = 0
-            window.update_track()
-        elif key == self.binds['google']:
-            window.player.refresh(source='google', cache=False)
-            window.current_pos = 0
-            window.update_track()
-
         elif key == self.binds['cycle-source']:
             window.player.refresh(cycle_source=True, cache=False)
             window.current_pos = 0
@@ -50,20 +41,20 @@ class Key:
 
         # keys to change alignment
         elif key == self.binds['left']:
-            window.player.track.alignment = 1
-            window.player.track.reset_width()
+            window.track.alignment = 1
+            window.track.reset_width()
             window.update_track()
         elif key == self.binds['center']:
-            window.player.track.alignment = 0
-            window.player.track.reset_width()
+            window.track.alignment = 0
+            window.track.reset_width()
             window.update_track()
         elif key == self.binds['right']:
-            window.player.track.alignment = 2
-            window.player.track.reset_width()
+            window.track.alignment = 2
+            window.track.reset_width()
             window.update_track()
 
         elif key == self.binds['delete']:
-            if window.player.track.delete_lyrics():
+            if window.track.delete_lyrics():
                 window.stdscr.addstr(window.height - 1, 1,
                                      ' Deleted ', curses.A_REVERSE)
         elif key == self.binds['help']:
@@ -72,7 +63,7 @@ class Key:
             window.height, window.width = window.stdscr.getmaxyx()
         elif key == self.binds['edit']:
             curses.endwin()
-            window.player.track.edit_lyrics()
+            window.track.edit_lyrics()
             window.stdscr = curses.initscr()
             window.current_pos = 0
             window.player.refresh(cache=True)

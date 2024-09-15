@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from lyrics import util
+from lyrics import util, Logger
 
 
 class Track:
@@ -17,7 +17,7 @@ class Track:
         self.length = 0
         self.lyrics = []
         self.source = None
-        self.album = None
+        self.album = ''
         self.trackid = None
         self.sources = ['google', 'azlyrics', 'genius']
 
@@ -52,6 +52,7 @@ class Track:
     def update(self, artist, title, album, trackid):
         ''' update currently playing track info, (change track)
         '''
+        Logger.debug(f'Updating track: {artist} - {title}')
         self.artist = artist
         self.title = title
         self.album = album
@@ -62,6 +63,9 @@ class Track:
     def get_lyrics(self, source, cycle_source=False, cache=True):
         ''' fetch lyrics off the internet
         '''
+        if self.trackid is None:
+            return
+
         if self.source is None or self.source == 'cache':
             self.source = source or self.sources[0]
 
