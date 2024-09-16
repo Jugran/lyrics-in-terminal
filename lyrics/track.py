@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from lyrics import util, Logger
+from lyrics import Logger, utils
 
 
 class Track:
@@ -41,7 +41,7 @@ class Track:
         ''' returns properly formated (3 lined, title, artist, album) track info for 
             title 
         '''
-        trackinfo = util.align([self.title, self.artist, self.album], width, self.alignment)
+        trackinfo = utils.align([self.title, self.artist, self.album], width, self.alignment)
         
         offset = self.alignment%2
         padding = ' ' * offset
@@ -85,24 +85,24 @@ class Track:
         ''' returns lyrics text seperated by '\\n'
         '''
         if wrap:
-            lyrics=util.wrap_text(self.lyrics, width)
+            lyrics=utils.wrap_text(self.lyrics, width)
         else:
             lyrics=self.lyrics
 
         self.width = len(max(lyrics, key=len))
         self.length = len(lyrics)
 
-        lyrics = util.align(lyrics, self.width, self.alignment)
+        lyrics = utils.align(lyrics, self.width, self.alignment)
 
         return '\n'.join(line for line in lyrics)
     
     def edit_lyrics(self):
         ''' open lyrics file in text editor present in CONFIG path
         '''
-        util.edit_lyrics(self.track_name)
+        utils.edit_lyrics(self.track_name)
 
 
     def delete_lyrics(self):
         ''' delete lyrics file
         '''
-        return util.delete_lyrics(self.track_name)
+        return utils.delete_lyrics(self.track_name)

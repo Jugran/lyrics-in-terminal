@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import curses
 import asyncio
 
@@ -45,11 +43,7 @@ class Window:
         self.current_pos = 0
 
         if self.controller.player.running:
-            self.update_track()
-            self.set_titlebar()
-            self.stdscr.refresh()
-            self.scroll_pad.refresh(self.current_pos, 0, 4,
-                                    self.pad_offset, self.height - 2, self.width - 1)
+            self.refresh_screen()
         else:
             self.stdscr.addstr(
                 0, 1, f'{self.controller.player.player_name} is not running!')

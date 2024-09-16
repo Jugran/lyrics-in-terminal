@@ -71,8 +71,8 @@ setup(
         "Operating System :: POSIX :: Linux",
     ],
     install_requires=[
-        'dbus-python',
-        'requests'
+        'dbus_next',
+        'aiohttp',
     ],
     extras_require={
         'mpd': ['python-mpd2'],

@@ -9,8 +9,8 @@ import sys
 
 import _curses
 
-from lyrics.listener.base import PlayerBase
-from lyrics.listener.dbus import DbusListener
+from lyrics.listeners.base import PlayerBase
+from lyrics.listeners.dbus import DbusListener
 from lyrics.display.window import Window
 from lyrics.config import Config
 from lyrics.track import Track

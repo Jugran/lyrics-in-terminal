@@ -4,7 +4,7 @@ import dbus_next
 from dbus_next.aio import ProxyInterface, MessageBus
 from dbus_next.message import Message, MessageType
 
-from lyrics.listener.base import PlayerBase
+from lyrics.listeners.base import PlayerBase
 from lyrics.track import Track
 from lyrics import Logger
 
