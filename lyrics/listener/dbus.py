@@ -1,59 +1,275 @@
-from gi.repository import GLib
+import re
+import dbus_next
 
-import dbus
-import traceback
-import sys
+from dbus_next.aio import ProxyInterface, MessageBus
+from dbus_next.message import Message, MessageType
+
+from lyrics.listener.base import PlayerBase
+from lyrics.track import Track
+from lyrics import Logger
 
 
-class DbusListener:
-    def __init__(self, bus_name, object_path, interface, display):
-        self.bus_name = bus_name
-        self.object_path = object_path
-        self.interface = interface
-        self.display = display
 
-        self.bus = None
-        self.player_object = None
-        self.loop = None
+def parse_variant_to_dict(variant):
+    """Convert a dbus-next Variant type to a Python dictionary."""
+    if not isinstance(variant, dbus_next.Variant):
+        Logger.warning(f'Provided object is not a dbus-next Variant. {variant}')
+        value = variant
+    else:
+        value = variant.value
 
-    def properties_changed(self, interface, changed, invalidated):
+    if isinstance(value, dict):
+        return {k: parse_variant_to_dict(v) if isinstance(v, dbus_next.Variant) else v for k, v in value.items()}
+    elif isinstance(value, list):
+        return [parse_variant_to_dict(v) if isinstance(v, dbus_next.Variant) else v for v in value]
+    else:
+        return value
 
-        metadata = changed.get('Metadata')  # dict
-        # -> string = Playing | Paused
+
+class DbusListener(PlayerBase):
+    def __init__(self, controller, name, source, autoswitch, track: "Track"):
+        self.controller = controller
+        self.player_name = name
+        self.default_source = source
+
+        self.autoswitch = autoswitch
+
+        self.running = False
+        self.track = track
+
+        self.player_object: ProxyInterface = None
+        self.player_properties: ProxyInterface = None
+        self.session_bus: MessageBus = None
+
+        self.object_path = '/org/mpris/MediaPlayer2'
+
+
+    async def get_service_interface(self, bus_name) -> tuple[ProxyInterface, ProxyInterface]:
+        ''' get player interfaces
+
+        Parameters:
+            bus_name: str
+
+        Returns:
+            player_interface: ProxyInterface
+            player_properties: ProxyInterface
+        '''
+        try:
+            introspection = await self.session_bus.introspect(bus_name, self.object_path)
+            proxy_obj = self.session_bus.get_proxy_object(
+                bus_name, self.object_path, introspection)
+            player_interface = proxy_obj.get_interface(
+                'org.mpris.MediaPlayer2.Player')
+            player_properties = proxy_obj.get_interface(
+                'org.freedesktop.DBus.Properties'
+            )
+
+            return player_interface, player_properties
+        except dbus_next.errors.DBusError as e:
+            Logger.error(
+                f'Error occured while retrieving player interface: {e}')
+            print("Error occured")
+
+    async def set_active_player(self):
+        ''' set playing player as active
+        '''
+
+        # Call the ListNames method to get the list of active service names
+        reply = await self.session_bus.call(
+            Message(destination='org.freedesktop.DBus',
+                    path='/org/freedesktop/DBus',
+                    interface='org.freedesktop.DBus',
+                    member='ListNames'))
+
+        if reply.message_type == MessageType.ERROR:
+            Logger.error(f'Error occured while retrieving players: {
+                         reply.body[0]}')
+            return
+
+        services = reply.body[0]
+
+        for service in services:
+            if not re.findall(r'org.mpris.MediaPlayer2|plasma-browser-integration', service, re.IGNORECASE):
+                continue
+
+            player_object, player_properties = await self.get_service_interface(service)
+            if player_object is None:
+                continue
+
+            status = await player_object.get_playback_status()
+            if status == 'Playing':
+                Logger.info(f'Active player found: {service}')
+                self.player_name = service.split('MediaPlayer2.')[-1]
+                self.player_object = player_object
+                self.player_properties = player_properties
+                self.running = True
+                return
+
+    async def set_interfaces(self):
+        ''' sets dbus session bus and player interface
+        '''
+
+        if not self.session_bus:
+            self.session_bus = await dbus_next.aio.MessageBus().connect()
+
+        if self.autoswitch:
+            await self.set_active_player()
+        else:
+            player_object, player_properties = await self.get_service_interface(f'org.mpris.MediaPlayer2.{self.player_name}')
+
+            if player_object is not None:
+                self.running = True
+                self.player_object = player_object
+                self.player_properties = player_properties
+            else:
+                self.running = False
+                self.player_object = None
+                self.player_properties = None
+
+    async def properties_changed(self, interface, changed, invalidated):
+        ''' properties changed handler
+
+        Parameters
+        ----------
+        interface : ProxyInterface
+            player interface
+        changed : dict
+            changed properties
+        invalidated : list
+            invalidated properties
+        '''
+
+        Logger.info(f'properties changed: {changed}')
+        metadata = changed.get('Metadata', None)
+
+        if metadata is not None:
+            metadata = parse_variant_to_dict(metadata)
 
         # PlaybackStatus and metadata can be absent from changed dict
-        playback_status = changed.get('PlaybackStatus')
+        playback_status = changed.get('PlaybackStatus', None)
 
-        # if self.update is not None:
-        #     self.update(metadata, playback_status)
+        if playback_status is not None:
+            playback_status = parse_variant_to_dict(playback_status)
+            self.running = (playback_status == 'Playing')
 
-        if self.display is not None:
-            self.display.update(playback_status, metadata)
+        if metadata is None:
+            Logger.info('metadata is None')
+            await self.controller.update_track(playback_status, None)
+            return
 
-    def quit_listener(self):
-        if self.loop is not None:
-            self.loop.quit()
+        track_data = self.parse_metadata(metadata)
 
-    def start_listener(self):
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        self.bus = dbus.SessionBus()
+        if track_data is None:
+            Logger.info('track_data is None')
+            await self.controller.update_track(playback_status, None)
+            return
+
+        await self.controller.update_track(playback_status, track_data)
+        Logger.info(f'metadata sent!: {track_data}')
+
+    def parse_metadata(self, metadata) -> dict:
+        ''' parses dbus changed metadata
+
+        Parameters
+        ----------
+        metadata : dict
+            metadata from dbus
+
+        Returns: 
+        ----------
+        dict with track data
+        '''
+        data = {
+            "title": '',
+            "artist": '',
+            "album": '',
+            "trackid": '',
+        }
 
         try:
-            self.player_object = self.bus.get_object(
-                self.bus_name, self.object_path)
+            title = metadata['xesam:title']
+            if title.strip() == '':
+                # if Title is empty, don't update
+                return None
 
-            self.player_object.connect_to_signal(
-                "PropertiesChanged", self.properties_changed, dbus_interface=self.interface)
+            artist = ''
+            if 'xesam:artist' in metadata:
+                artist = metadata['xesam:artist']
+            artist = artist[0] if isinstance(artist, list) else artist
 
-        except dbus.DBusException:
-            traceback.print_exc()
-            print("Error occured")
-            sys.exit(1)
+            if re.search('chromium|plasma', self.player_name) and '-' in title:
+                # in case of artist in the title
+                artist, title, *_ = title.split('-')
 
-        self.loop = GLib.MainLoop()
+            title = title.strip()
+            artist = artist.strip()
 
-        try:
-            self.loop.run()
-        except KeyboardInterrupt:
-            print("Thread: KeyboardInterrupt")
-            self.loop.quit()
+            album = metadata.get('xesam:album')
+            album = '' if album is None else album
+            trackid = metadata.get('mpris:trackid')
+            trackid = title if trackid is None else trackid
+        except (IndexError, KeyError) as e:
+            self.running = False
+            return None
+
+        if trackid.find('spotify:ad') != -1:
+            self.running = False
+            return None
+        elif self.track.trackid != trackid or self.track.title != title:
+            # update track
+            data['title'] = title
+            data['artist'] = artist
+            data['album'] = album
+            data['trackid'] = trackid
+            return data
+
+    async def check_playing(self):
+        ''' checks playing status of current player
+        '''
+
+        if self.player_object:
+            status = await self.player_object.get_playback_status()
+            self.running = (status == 'Playing')
+
+        return self.running
+
+    async def set_listner(self):
+            ''' sets dbus player properties changed listener
+            '''
+            if self.player_object is None:
+                return
+
+            self.player_properties.on_properties_changed(self.properties_changed)
+            Logger.info('listener started')
+
+    async def stop_listner(self):
+        ''' stops dbus player properties changed listener
+        '''
+        if self.player_object is None:
+            return
+
+        self.player_properties.off_properties_changed(self.properties_changed)
+        Logger.info('listener stopped')
+
+    async def update_metadata(self):
+        ''' updates metadata on request
+        '''
+        if self.player_object is None:
+            Logger.info('Cannot init metadata, player object is None')
+            return
+
+        metadata = await self.player_object.get_metadata()
+        metadata = parse_variant_to_dict(metadata)
+        Logger.info(f'to dict metadata: {metadata}')
+        track_data = self.parse_metadata(metadata)
+        Logger.info(f'parsed metadata: {track_data}')
+        if track_data is None:
+            return
+
+        await self.controller.update_track(None, track_data)
+
+    async def main(self):
+        await self.set_interfaces()
+        await self.check_playing()
+        await self.update_metadata()
+        await self.set_listner()

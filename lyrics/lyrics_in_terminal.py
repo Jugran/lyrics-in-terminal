@@ -9,7 +9,8 @@ import sys
 
 import _curses
 
-from lyrics.listener.player import DbusListener as Player
+from lyrics.listener.base import PlayerBase
+from lyrics.listener.dbus import DbusListener
 from lyrics.display.window import Window
 from lyrics.config import Config
 from lyrics.track import Track
@@ -19,17 +20,19 @@ from lyrics import Logger
 class LyricsInTerminal:
     def __init__(self, stdscr: "_curses._CursesWindow|None" = None, stdout_mode=False):
         self.stdscr = stdscr
-        self.player: Player = None
+        self.player: PlayerBase = None
         self.window: Window = None
         self.track: Track = None
 
         if stdout_mode:
             return
 
-        self.init_pager()
+        self.init()
 
-    def init_pager(self):
-        Logger.info('Initializing lyrics pager...')
+    def init(self):
+        ''' Initialize the lyrics app.
+        '''
+        Logger.info('Initializing lyrics app...')
         defaults = Config('OPTIONS')
 
         player_name = defaults['player'].strip()
@@ -51,9 +54,10 @@ class LyricsInTerminal:
 
         self.track = Track(align=align)
 
-        self.player = Player(controller=self, name=player_name,
+        # TODO: add os platform check here
+        self.player = DbusListener(controller=self, name=player_name,
                              source=source, autoswitch=autoswitch,
-                             mpd_connect=mpd_connect, track=self.track)
+                             track=self.track)
         self.window = Window(controller=self, stdscr=self.stdscr,
                              timeout=interval, track=self.track)
 
@@ -65,7 +69,7 @@ class LyricsInTerminal:
             self.player.main(),
             )
 
-    def stdout_lyrics(self, sys_argv):
+    def stdout_lyrics(self):
         Logger.info('STDOUT lyrics mode...')
         try:
             artist = sys.argv[2].strip()
@@ -123,7 +127,7 @@ def init_pager(stdscr=None):
 def main():
     if len(sys.argv) >= 2 and sys.argv[1] == '-t':
         lyrics = LyricsInTerminal(stdout_mode=True)
-        lyrics.stdout_lyrics(sys.argv)
+        lyrics.stdout_lyrics()
     else:
         init_pager()
 
