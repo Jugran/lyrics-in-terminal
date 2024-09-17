@@ -10,9 +10,9 @@ class GoogleSource(SourceBase):
     URL = 'https://www.google.com/search?q='
     CLASS_NAME = r'\w{5,7} \w{4,5} \w{5,7}'  # dependent on User-Agent
 
-    def __init__(self) -> None:
+    def __init__(self, track_name=None) -> None:
         super().__init__()
-        self.track_name = None
+        self.track_name = track_name
         self.html = None
 
     def query(self):
@@ -32,7 +32,7 @@ class GoogleSource(SourceBase):
         self.html = await self.get_html(url)
         return self.html
 
-    async def parse_lyrics(self, html: str | None) -> List[str] | None:
+    def parse_lyrics(self, html: str | None) -> List[str] | None:
         ''' parses google result html
             returns list of strings or None if no lyrics found
         '''
@@ -60,9 +60,9 @@ class GoogleSource(SourceBase):
 
         return lyrics_lines
 
-    async def get_lyrics(self, track_name) -> List[str]:
+    async def get_lyrics(self, track_name) -> List[str] | None:
         ''' returns list of strings
         '''
         self.track_name = track_name
         html = await self.extract_html()
-        return await self.parse_lyrics(html)
+        return self.parse_lyrics(html)

@@ -24,13 +24,13 @@ class SourceBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def parse_lyrics(self, html: str | None) -> List[str] | None:
+    def parse_lyrics(self, html: str | None) -> List[str] | None:
         ''' parses lyrics from html
         '''
         raise NotImplementedError()
 
     @abstractmethod
-    async def get_lyrics(self) -> List[str]:
+    async def get_lyrics(self) -> List[str] | None:
         ''' returns list of strings
         '''
         raise NotImplementedError()

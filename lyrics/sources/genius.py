@@ -30,7 +30,7 @@ class GeniusSource(SourceBase):
             return None
         return gns_html
 
-    async def parse_lyrics(self, html: str | None) -> List[str] | None:
+    def parse_lyrics(self, html: str | None) -> List[str] | None:
         ''' parses lyrics from genius html
             returns list if strings of lyrics or None if lyrics not found
         '''
@@ -51,16 +51,21 @@ class GeniusSource(SourceBase):
             line_regex = re.compile(r'>([^<]+?)<', re.S)
             lines = line_regex.findall(ly_section)
             lyrics_lines += "\n".join(lines)
+            lyrics_lines += "\n"
 
         lyrics_lines = re.sub(r'\n{2,}', '\n', lyrics_lines)
         lyrics_lines = lyrics_lines.replace('\n[', '\n\n[')
 
+        # replace html entities
+        rep = {'&quot;': '\"', '&amp;': '&', '\r': ''}
+        replace_patten = '|'.join(rep.keys())
+        lyrics_lines = re.sub(replace_patten, lambda match: rep[match.group(0)], lyrics_lines)
         lyrics_lines = lyrics_lines.split('\n')
 
         return lyrics_lines
 
-    async def get_lyrics(self, html: str) -> List[str]:
+    async def get_lyrics(self, html: str) -> List[str] | None:
         ''' returns list of strings
         '''
         html = await self.extract_html(html)
-        return await self.parse_lyrics(html)
+        return self.parse_lyrics(html)

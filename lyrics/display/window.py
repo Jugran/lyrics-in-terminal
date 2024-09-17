@@ -1,13 +1,21 @@
 import curses
 import asyncio
 
+import _curses
+
 from lyrics.display.key import Key
 from lyrics.config import Config
+from lyrics.track import Track
 from lyrics import Logger
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lyrics.lyrics_in_terminal import LyricsInTerminal
 
 
 class Window:
-    def __init__(self, controller, stdscr, timeout, track):
+    def __init__(self, controller: "LyricsInTerminal", stdscr: "_curses._CursesWindow", track: Track):
         self.options = Config('OPTIONS')
         self.controller = controller
         self.track = track
@@ -319,6 +327,7 @@ class Window:
         self.scroll_pad.refresh(self.current_pos, 0, 4,
                                 self.pad_offset, self.height - 2, self.width - 1)
 
+    # TODO: create logger annotation to log entry exit and errors
     async def main(self):
         """
         Main function that runs the display loop, listening for key inputs.
@@ -347,10 +356,13 @@ class Window:
                 continue
 
             if self.track.trackid is not None and self.controller.player.running:
-                self.keys.input(self, key)
+                await self.keys.input(self, key)
                 self.refresh_screen()
             else:
                 self.stdscr.clear()
                 self.stdscr.addstr(
                     0, 1, f'{self.controller.player.player_name} player is not running.')
                 self.stdscr.refresh()
+
+        Logger.info('Window main loop exited.')
+        self.controller.quit()

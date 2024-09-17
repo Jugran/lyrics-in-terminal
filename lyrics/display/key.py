@@ -1,13 +1,19 @@
-from lyrics.config import Config
-from lyrics.display.help import HelpPage
 import curses
 
+from lyrics.config import Config
+from lyrics.display.help import HelpPage
+from lyrics.sources import Source
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lyrics.display.window import Window
 
 class Key:
     def __init__(self):
         self.binds = Config('BINDINGS')
 
-    def input(self, window, key):
+    async def input(self, window: 'Window', key):
         """
         Process the input from the user interface and perform corresponding actions.
 
@@ -35,9 +41,9 @@ class Key:
             window.stdscr.erase()
 
         elif key == self.binds['cycle-source']:
-            window.player.refresh(cycle_source=True, cache=False)
+            await window.track.get_lyrics(cycle_source=True, cache=False)
             window.current_pos = 0
-            window.update_track(True)
+            window.update_track(show_source=True)
 
         # keys to change alignment
         elif key == self.binds['left']:

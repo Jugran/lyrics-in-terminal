@@ -1,19 +1,26 @@
 import re
 import dbus_next
+import asyncio
 
 from dbus_next.aio import ProxyInterface, MessageBus
 from dbus_next.message import Message, MessageType
 
 from lyrics.listeners.base import PlayerBase
+from lyrics.sources import Source
 from lyrics.track import Track
 from lyrics import Logger
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from lyrics.lyrics_in_terminal import LyricsInTerminal
 
 
 def parse_variant_to_dict(variant):
     """Convert a dbus-next Variant type to a Python dictionary."""
     if not isinstance(variant, dbus_next.Variant):
-        Logger.warning(f'Provided object is not a dbus-next Variant. {variant}')
+        Logger.warning(
+            f'Provided object is not a dbus-next Variant. {variant}')
         value = variant
     else:
         value = variant.value
@@ -27,12 +34,13 @@ def parse_variant_to_dict(variant):
 
 
 class DbusListener(PlayerBase):
-    def __init__(self, controller, name, source, autoswitch, track: "Track"):
+    def __init__(self, controller: "LyricsInTerminal", name: str, source: Source, autoswitch: bool, timeout: int, track: "Track"):
         self.controller = controller
         self.player_name = name
         self.default_source = source
 
         self.autoswitch = autoswitch
+        self.timeout = timeout / 1000
 
         self.running = False
         self.track = track
@@ -42,7 +50,6 @@ class DbusListener(PlayerBase):
         self.session_bus: MessageBus = None
 
         self.object_path = '/org/mpris/MediaPlayer2'
-
 
     async def get_service_interface(self, bus_name) -> tuple[ProxyInterface, ProxyInterface]:
         ''' get player interfaces
@@ -165,7 +172,6 @@ class DbusListener(PlayerBase):
             return
 
         await self.controller.update_track(playback_status, track_data)
-        Logger.info(f'metadata sent!: {track_data}')
 
     def parse_metadata(self, metadata) -> dict:
         ''' parses dbus changed metadata
@@ -234,13 +240,13 @@ class DbusListener(PlayerBase):
         return self.running
 
     async def set_listner(self):
-            ''' sets dbus player properties changed listener
-            '''
-            if self.player_object is None:
-                return
+        ''' sets dbus player properties changed listener
+        '''
+        if self.player_object is None:
+            return
 
-            self.player_properties.on_properties_changed(self.properties_changed)
-            Logger.info('listener started')
+        self.player_properties.on_properties_changed(self.properties_changed)
+        Logger.info('listener started')
 
     async def stop_listner(self):
         ''' stops dbus player properties changed listener
@@ -268,8 +274,16 @@ class DbusListener(PlayerBase):
 
         await self.controller.update_track(None, track_data)
 
+    async def wait_for_player(self):
+        ''' waits for player to be running
+        '''
+        await self.check_playing()
+        while not self.running:
+            await asyncio.sleep(self.timeout)
+            await self.set_interfaces()
+
     async def main(self):
         await self.set_interfaces()
-        await self.check_playing()
+        await self.wait_for_player()
         await self.update_metadata()
         await self.set_listner()

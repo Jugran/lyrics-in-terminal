@@ -29,7 +29,7 @@ class AZLyricsSource(SourceBase):
 
         return az_html
 
-    async def parse_lyrics(self, html: str | None) -> List[str] | None:
+    def parse_lyrics(self, html: str | None) -> List[str] | None:
         ''' parses lyrics from azlyrics html
             returns list if strings of lyrics
 
@@ -57,8 +57,9 @@ class AZLyricsSource(SourceBase):
 
         return lyrics_lines
 
-    async def get_lyrics(self, html: str) -> List[str]:
+    async def get_lyrics(self, html: str) -> List[str] | None:
         ''' returns list of strings
         '''
         html = await self.extract_html(html)
-        return await self.parse_lyrics(html)
+        # NOTE: this parsing can be offloaded to a different thread
+        return self.parse_lyrics(html)

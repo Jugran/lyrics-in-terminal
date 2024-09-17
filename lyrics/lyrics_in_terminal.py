@@ -14,6 +14,7 @@ from lyrics.listeners.dbus import DbusListener
 from lyrics.display.window import Window
 from lyrics.config import Config
 from lyrics.track import Track
+from lyrics.sources import Source
 from lyrics import Logger
 
 
@@ -23,6 +24,7 @@ class LyricsInTerminal:
         self.player: PlayerBase = None
         self.window: Window = None
         self.track: Track = None
+        self.tasks = None
 
         if stdout_mode:
             return
@@ -48,26 +50,31 @@ class LyricsInTerminal:
             align = 1
 
         interval = defaults['interval']
-        source = defaults['source']
         mpd_connect = [defaults['mpd_host'],
                        defaults['mpd_port'], defaults['mpd_pass']]
 
-        self.track = Track(align=align)
+        source = defaults['source']
+        source = Source(source)
+
+        self.track = Track(align=align, default_source=source)
 
         # TODO: add os platform check here
         self.player = DbusListener(controller=self, name=player_name,
-                             source=source, autoswitch=autoswitch,
-                             track=self.track)
+                                   source=source, autoswitch=autoswitch,
+                                   timeout=interval,
+                                   track=self.track)
         self.window = Window(controller=self, stdscr=self.stdscr,
-                             timeout=interval, track=self.track)
+                              track=self.track)
 
     async def start(self):
         Logger.info('Starting lyrics pager...')
-        
-        await asyncio.gather(
+
+        self.tasks = asyncio.gather(
             self.window.main(),
             self.player.main(),
-            )
+        )
+
+        await self.tasks
 
     def stdout_lyrics(self):
         Logger.info('STDOUT lyrics mode...')
@@ -80,7 +87,7 @@ class LyricsInTerminal:
             exit(1)
 
         track = Track(artist=artist, title=title)
-        track.get_lyrics(source='any')
+        track.get_lyrics()
 
         print(track.track_name)
         print('-' * track.width, '\n')
@@ -89,6 +96,12 @@ class LyricsInTerminal:
         Logger.info('Lyrics printed. Exiting...')
         exit(0)
 
+    def quit(self):
+        Logger.info('Quitting...')
+
+        if self.tasks is not None:
+            self.tasks.cancel()
+
     async def update_track(self, playback_status=None, metadata=None):
         Logger.info(f'Updating track...{playback_status} {metadata}')
         if playback_status is not None:
@@ -96,9 +109,9 @@ class LyricsInTerminal:
 
         if metadata is not None:
             self.track.update(**metadata)
-            self.track.get_lyrics(source='any')
+            await self.track.get_lyrics()
 
-            # TODO: combine update and refresh
+            # TODO: remove track lyrics dependency from window update
             self.window.update_track()
             self.window.refresh_screen()
 
@@ -121,7 +134,10 @@ def ErrorHandler(func):
 @ErrorHandler
 def init_pager(stdscr=None):
     lyrics = LyricsInTerminal(stdscr)
-    asyncio.run(lyrics.start())
+    try:
+        asyncio.run(lyrics.start())
+    except asyncio.CancelledError:
+        exit(1)
 
 
 def main():
