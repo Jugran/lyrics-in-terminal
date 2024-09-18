@@ -1,5 +1,5 @@
 import os
-import re
+import asyncio
 from typing import List, Tuple
 
 from lyrics import Logger, utils, CACHE_PATH
@@ -43,6 +43,7 @@ class Track:
         self.trackid = None
         self.sources = [Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
         self.status = Status.IDLE
+        self.task = None
 
     def __str__(self):
         ''' trackname in format "{artist} - {title}"
@@ -85,8 +86,20 @@ class Track:
         # self.art_url = art_url
         # self.get_lyrics()
 
-    async def get_lyrics(self, cycle_source=False, cache=True):
-        ''' fetch lyrics off the internet
+    async def update_lyrics(self, cycle_source=False, cache=True):
+        ''' updates lyrics from source
+        '''
+        if self.task is not None:
+            self.task.cancel()
+
+        self.task = asyncio.create_task(
+            self._update_lyrics(cycle_source, cache))
+
+        # TODO:Move this to background thread
+        await self.task
+
+    async def _update_lyrics(self, cycle_source=False, cache=True):
+        ''' loads lyrics from source
         '''
         self.status = Status.LOADING
         if self.trackid is None:

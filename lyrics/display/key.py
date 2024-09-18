@@ -43,7 +43,7 @@ class Key:
 
         elif key == self.binds['cycle-source']:
             window.add_notif('Switching source...')
-            await window.track.get_lyrics(cycle_source=True, cache=False)
+            await window.track.update_lyrics(cycle_source=True, cache=False)
             window.current_pos = 0
 
         # keys to change alignment
@@ -73,7 +73,7 @@ class Key:
             window.track.edit_lyrics()
             window.stdscr = curses.initscr()
             window.current_pos = 0
-            await window.track.get_lyrics(cache=True)
+            await window.track.update_lyrics(cache=True)
             window.update_track()
 
         elif key == self.binds['find']:

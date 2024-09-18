@@ -87,7 +87,7 @@ class LyricsInTerminal:
             exit(1)
 
         track = Track(None, artist=artist, title=title)
-        track.get_lyrics()
+        track.update_lyrics()
 
         print(track.track_name)
         print('-' * track.width, '\n')
@@ -111,7 +111,7 @@ class LyricsInTerminal:
             # TODO: cancel previous fetch task if exists
             self.track.update(**metadata)
             self.window.refresh_screen(titlebar_only=True)
-            await self.track.get_lyrics()
+            await self.track.update_lyrics()
 
 
 def ErrorHandler(func):
