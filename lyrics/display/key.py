@@ -72,7 +72,7 @@ class Key:
             window.track.edit_lyrics()
             window.stdscr = curses.initscr()
             window.current_pos = 0
-            window.player.refresh(cache=True)
+            await window.track.get_lyrics(cache=True)
             window.update_track()
 
         elif key == self.binds['find']:
@@ -80,6 +80,6 @@ class Key:
 
         # autoswitch toggle
         elif key == self.binds['autoswitchtoggle']:
-            window.player.autoswitch = not window.player.autoswitch
+            window.controller.player.autoswitch = not window.controller.player.autoswitch
             window.stdscr.addstr(window.height - 1, 1,
-                                 f" Autoswitch: {'on' if window.player.autoswitch else 'off'} ", curses.A_REVERSE)
+                                 f" Autoswitch: {'on' if window.controller.player.autoswitch else 'off'} ", curses.A_REVERSE)

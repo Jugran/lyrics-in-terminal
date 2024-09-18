@@ -163,7 +163,7 @@ class Track:
         '''
         if source in self.sources:
             self.source = source
-        else:
+        elif source == Source.ANY:
             save = False
 
         self.lyrics = lyrics
@@ -173,7 +173,8 @@ class Track:
         if save:
             filepath = utils.get_filename(self.track_name)
             with open(filepath, 'w') as file:
-                file.writelines(self.lyrics)
+                text = '\n'.join(self.lyrics)
+                file.write(text)
 
     def next_source(self):
         ''' cycle to next source
