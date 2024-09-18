@@ -118,9 +118,10 @@ class Track:
 
         if self.controller is not None:
             Logger.debug('Refreshing screen...')
-            self.controller.window.update_track(show_source=True)
+            self.controller.window.update_track()
+            self.controller.window.add_notif(f'Source: {self.source}')
 
-    async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str], Source | None]:
+    async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str] | None, Source | None]:
         ''' returns tuple of list of strings with lines of lyrics and found source
             also reads/write to cache file | if cache=True
 
@@ -138,6 +139,8 @@ class Track:
             # cache lyrics exist
             with open(filepath) as file:
                 lyrics_lines = file.read().splitlines()
+
+            lyrics_lines = lyrics_lines if len(lyrics_lines) > 0 else None
             return lyrics_lines, Source.CACHE
 
         google = GoogleSource(self.track_name)
@@ -161,28 +164,33 @@ class Track:
             lyrics_lines = await genius.get_lyrics(search_html)
             found_source = Source.GENIUS if lyrics_lines is not None else None
 
-        found_source = found_source or source
-        if lyrics_lines is None:
-            return ['lyrics not found! :( for', str(found_source)], found_source
+        if lyrics_lines is None or len(lyrics_lines) < 2:
+            Logger.debug(f'Lyrics not found - {source}, {self.track_name}')
+            return None, source
 
+        Logger.debug(f'Lyrics found - {found_source}, {self.track_name}')
         return lyrics_lines, found_source
 
-    def set_lyrics(self, lyrics: List[str], source: Source, save=True):
+    def set_lyrics(self, lyrics: List[str] | None, source: Source, save=True):
         ''' set lyrics and source for track
 
             lyrics -> list of strings
             source -> source to fetch lyrics from ('google', 'azlyrics', 'genius', 'any')
             save -> bool | whether to save lyrics to cache
         '''
-        if source in self.sources:
+        if source is not None and source != Source.ANY:
             self.source = source
-        elif source == Source.ANY:
+
+        if lyrics is None:
+            lyrics = ['Lyrics not found in ' + str(source) + ' :(']
             save = False
 
         self.lyrics = lyrics
 
+        Logger.debug(f'Lyrics set - {self.lyrics}, {self.source}')
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
+
         if save:
             filepath = utils.get_filename(self.track_name)
             with open(filepath, 'w') as file:
@@ -192,7 +200,7 @@ class Track:
     def next_source(self):
         ''' cycle to next source
         '''
-        if self.source is None:
+        if self.source is None or self.source == Source.CACHE:
             self.source = self.sources[-1]
 
         curr_source = self.sources.index(self.source)

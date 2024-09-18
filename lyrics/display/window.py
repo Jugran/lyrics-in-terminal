@@ -293,7 +293,7 @@ class Window:
         self.stdscr.clear()
         self.stdscr.timeout(self.timeout)
 
-    def update_track(self, show_source=False):
+    def update_track(self):
         """
         Updates the track display by clearing the screen and the scroll pad.
         Wraps the track text if necessary. The offset of the scroll pad is set.
@@ -320,10 +320,6 @@ class Window:
         self.scroll_pad.resize(pad_height, pad_width)
         self.scroll_pad.addstr(text)
         self.set_offset()
-
-        if show_source:
-            self.stdscr.addstr(self.height - 1, 1,
-                               f" Source: {self.track.source}", curses.A_REVERSE)
 
         self.refresh_screen()
 
@@ -352,30 +348,40 @@ class Window:
             None
         """
         curses.use_default_colors()
-        self.stdscr.timeout(self.timeout)
+
+        if self.controller.player.running:
+            self.stdscr.timeout(200)
+        else:
+            self.stdscr.timeout(-1)
         self.set_up()
 
         Logger.info('Window main loop...')
         key = ''
 
+        # TODO: try to make inputs async and event driven
+        # inputs should be detected by inputs and it should call window refresh()
+        # any change in state should call window refresh() manually
+        # maybe make a decorator which refreshes on function exit???
         while key != self.keys.binds['quit']:
 
             self.height, self.width = self.stdscr.getmaxyx()
 
             key = await asyncio.to_thread(self.stdscr.getch)
-            Logger.debug(f'Key pressed: {key}')
-
             if key == curses.ERR:
                 continue
+
+            Logger.debug(f'Key pressed: {key}')
 
             if self.track.trackid is not None and self.controller.player.running:
                 await self.keys.input(self, key)
                 self.refresh_screen()
+                self.stdscr.timeout(-1)
             else:
                 self.stdscr.clear()
                 self.stdscr.addstr(
                     0, 1, f'{self.controller.player.player_name} player is not running.')
                 self.stdscr.refresh()
+                self.stdscr.timeout(200)
 
         Logger.info('Window main loop exited.')
         self.controller.quit()

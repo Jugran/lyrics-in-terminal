@@ -62,8 +62,7 @@ class Key:
 
         elif key == self.binds['delete']:
             if window.track.delete_lyrics():
-                window.stdscr.addstr(window.height - 1, 1,
-                                     ' Deleted ', curses.A_REVERSE)
+                window.add_notif('Deleted')
         elif key == self.binds['help']:
             window.stdscr.erase()
             HelpPage(self.binds)
