@@ -56,7 +56,7 @@ class LyricsInTerminal:
         source = defaults['source']
         source = Source(source)
 
-        self.track = Track(align=align, default_source=source)
+        self.track = Track(self, align=align, default_source=source)
 
         # TODO: add os platform check here
         self.player = DbusListener(controller=self, name=player_name,
@@ -64,7 +64,7 @@ class LyricsInTerminal:
                                    timeout=interval,
                                    track=self.track)
         self.window = Window(controller=self, stdscr=self.stdscr,
-                              track=self.track)
+                             track=self.track)
 
     async def start(self):
         Logger.info('Starting lyrics pager...')
@@ -86,7 +86,7 @@ class LyricsInTerminal:
                 'Please provide track info in format "-t {artist} {title}".')
             exit(1)
 
-        track = Track(artist=artist, title=title)
+        track = Track(None, artist=artist, title=title)
         track.get_lyrics()
 
         print(track.track_name)
@@ -108,12 +108,10 @@ class LyricsInTerminal:
             pass
 
         if metadata is not None:
+            # TODO: cancel previous fetch task if exists
             self.track.update(**metadata)
+            self.window.refresh_screen(titlebar_only=True)
             await self.track.get_lyrics()
-
-            # TODO: remove track lyrics dependency from window update
-            self.window.update_track()
-            self.window.refresh_screen()
 
 
 def ErrorHandler(func):

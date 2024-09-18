@@ -320,7 +320,15 @@ class Window:
             self.stdscr.addstr(self.height - 1, 1,
                                f" Source: {self.track.source}", curses.A_REVERSE)
 
-    def refresh_screen(self):
+        self.refresh_screen()
+
+    def refresh_screen(self, titlebar_only=False):
+        # TODO: make titlebar separate widget
+        if titlebar_only:
+            self.set_titlebar()
+            self.stdscr.refresh()
+            return
+
         self.set_titlebar()
         self.set_statusbar()
         self.stdscr.refresh()

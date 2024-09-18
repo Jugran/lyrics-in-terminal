@@ -7,10 +7,23 @@ from lyrics.sources import Source
 from lyrics.sources.genius import GeniusSource
 from lyrics.sources.azlyrics import AZLyricsSource
 from lyrics.sources.google import GoogleSource
+from typing import TYPE_CHECKING
+from enum import Enum
+
+if TYPE_CHECKING:
+    from lyrics.lyrics_in_terminal import LyricsInTerminal
+
+
+class Status(Enum):
+    IDLE = 0
+    LOADING = 1
+    LOADED = 2
+    ERROR = 3
 
 
 class Track:
     def __init__(self,
+                 controller: "LyricsInTerminal|None" = None,
                  artist='',
                  title='',
                  align=1,
@@ -18,6 +31,7 @@ class Track:
                  default_source=Source.GOOGLE
                  ):
 
+        self.controller = controller
         self.title = title
         self.artist = artist
         self.alignment = align
@@ -28,6 +42,7 @@ class Track:
         self.album = ''
         self.trackid = None
         self.sources = [Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
+        self.status = Status.IDLE
 
     def __str__(self):
         ''' trackname in format "{artist} - {title}"
@@ -73,6 +88,7 @@ class Track:
     async def get_lyrics(self, cycle_source=False, cache=True):
         ''' fetch lyrics off the internet
         '''
+        self.status = Status.LOADING
         if self.trackid is None:
             return
 
@@ -85,7 +101,11 @@ class Track:
 
         lyrics, source = await self.fetch_lyrics(source, cache=cache)
         self.set_lyrics(lyrics, source)
-        # TODO: call refersh window here when lyrics are fetched
+        self.status = Status.LOADED
+
+        if self.controller is not None:
+            Logger.debug('Refreshing screen...')
+            self.controller.window.update_track(show_source=True)
 
     async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str], Source | None]:
         ''' returns tuple of list of strings with lines of lyrics and found source
