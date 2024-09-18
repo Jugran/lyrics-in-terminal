@@ -87,6 +87,11 @@ class Window:
         self.stdscr.insstr(self.height - 1, self.width -
                            len(pct_progress), pct_progress, curses.A_DIM)
 
+    def add_notif(self, text: str):
+        text = f" {text} "
+        self.stdscr.addstr(self.height - 1, 1, text, curses.A_REVERSE)
+        self.stdscr.refresh()
+
     def set_offset(self):
         """
         Set the offset for the player track based on the alignment.

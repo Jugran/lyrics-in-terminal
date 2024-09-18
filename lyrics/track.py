@@ -150,7 +150,7 @@ class Track:
 
         found_source = found_source or source
         if lyrics_lines is None:
-            return ['lyrics not found! :( for', (found_source)], found_source
+            return ['lyrics not found! :( for', str(found_source)], found_source
 
         return lyrics_lines, found_source
 

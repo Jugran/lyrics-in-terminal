@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from lyrics.display.window import Window
 
+
 class Key:
     def __init__(self):
         self.binds = Config('BINDINGS')
@@ -41,9 +42,9 @@ class Key:
             window.stdscr.erase()
 
         elif key == self.binds['cycle-source']:
+            window.add_notif('Switching source...')
             await window.track.get_lyrics(cycle_source=True, cache=False)
             window.current_pos = 0
-            window.update_track(show_source=True)
 
         # keys to change alignment
         elif key == self.binds['left']:
