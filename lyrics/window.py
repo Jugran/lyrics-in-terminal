@@ -6,7 +6,7 @@ from lyrics.config import Config
 from lyrics import __version__
 
 import curses
-import util
+from lyrics import util
 import time
 
 class Key:
