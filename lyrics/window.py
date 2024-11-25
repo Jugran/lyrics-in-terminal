@@ -6,7 +6,8 @@ from lyrics.config import Config
 from lyrics import __version__
 
 import curses
-
+import util
+import time
 
 class Key:
 	def __init__(self):
@@ -143,8 +144,10 @@ class Window:
 		self.text_padding = 5
 		self.keys = Key()
 		self.find_position = 0
-		self.timeout = timeout
-
+		self.timeout = 100  # Fixed timeout for smoother updates
+		self.last_highlight = -1  # Track last highlighted line
+		self.last_update = 0  # Track last display update time
+        
 		curses.use_default_colors()
 		self.stdscr.timeout(self.timeout)
 		self.set_up()
@@ -349,20 +352,66 @@ class Window:
 		else:
 			text = self.player.track.get_text()
 
-		pad_height = max(self.height, self.player.track.length) + 2
-		pad_width = max(self.width, self.player.track.width) + 2
+		if not text:
+			return
 
-		self.scroll_pad.resize(pad_height, pad_width)
-		self.scroll_pad.addstr(text)
-		self.set_offset()
+		lines = text.split('\n')
+		if not lines:
+			return
+            
+		# Align all lines according to current alignment
+		aligned_lines = util.align(lines, self.width - 2, self.player.track.alignment)
+            
+		# Adjust pad size if needed
+		pad_height = max(self.height, len(aligned_lines)) + 2
+		pad_width = max(self.width, max(len(line) for line in aligned_lines)) + 2
+		try:
+			self.scroll_pad.resize(pad_height, pad_width)
+		except curses.error:
+			pass
 
+		# Get current playback position
+		try:
+			current_time = float(self.player.get_time_pos())
+		except (ValueError, TypeError):
+			current_time = 0
+
+		# Update display with highlighting
+		for i, line in enumerate(aligned_lines):
+			attrs = curses.A_NORMAL
+            
+			# Handle LRC highlighting
+			if self.player.track.timestamps and self.player.track.source == 'lrc':
+				current_line = -1
+				for j, ts in enumerate(self.player.track.timestamps):
+					if ts <= current_time:
+						current_line = j
+					else:
+						break
+                
+				if i == current_line:
+					attrs = curses.A_REVERSE
+					if self.last_highlight != i:
+						self.current_pos = max(0, i - 2)
+						self.last_highlight = i
+
+			# Add line to pad
+			try:
+				self.scroll_pad.addstr(i, self.pad_offset, line, attrs)
+			except curses.error:
+				pass
+
+		# Show source if requested
 		if show_source:
 			self.stdscr.addstr(self.height - 1, 1,
                     f" Source: {self.player.track.source}", curses.A_REVERSE)
-
+		self.set_titlebar()
+		self.set_statusbar()
+		self.set_offset()
 	def main(self):
 		key = ''
-
+		last_lrc_update = time.time()
+        
 		while key != self.keys.binds['quit']:
 			key = self.stdscr.getch()
 
@@ -372,6 +421,13 @@ class Window:
 				if self.player.update():
 					self.current_pos = 0
 					self.update_track()
+				# Update display every 100ms for LRC files
+				elif (self.player.running and 
+				      self.player.track.timestamps and 
+				      self.player.track.source == 'lrc' and 
+				      time.time() - last_lrc_update >= 0.1):
+					self.update_track()
+					last_lrc_update = time.time()
 					
 			if self.player.running:
 				self.keys.input(self, key)
