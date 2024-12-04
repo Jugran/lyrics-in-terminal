@@ -1,0 +1,56 @@
+[project]
+name = "lyrics-in-terminal"
+# Indicate that the version will be determined "dynamically" by setuptools.
+dynamic = [ "version" ]
+description = "Command Line Lyrics fetcher from mpris media player like Spotify, VLC, Audacious"
+# When PEP 639 is fully implemented, this can become simply `license = "MIT"`.
+license = { file = "LICENSE" }
+# As long as the README file is valid UTF-8, this suffices to fill in the
+# old `long_description` and `long_description_content_type` values:
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+requires-python = ">=3.7"
+# Analogous to `install_requires`.
+dependencies = [ "dbus-python", "requests" ]
+
+# Analogous to `extras_require`.
+[project.optional-dependencies]
+mpd = [ "python-mpd2" ]
+full = [ "python-mpd2" ]
+
+[[project.authors]]
+name = 'Samarth Jugran'
+email = 'jugransamarth@gmail.com'
+
+# Analogous to `entry_points['console_scripts']`.
+[project.scripts]
+lyrics = "lyrics.lyrics_in_terminal:main"
+lyt = "lyrics.lyrics_in_terminal:main"
+
+[project.urls]
+homepage = "https://github.com/Jugran/lyrics-in-terminal"
+
+# Setuptools-specific options.
+[tool.setuptools]
+# Tell Setuptools that the images/ folder isn't a package, although
+# it does contain data files for the sdist (only).
+packages = [ "lyrics" ]
+# Fine-grained control over which files from the sdist go into the wheel.
+package-data.lyrics = [ "lyrics.cfg" ]
+# This allows Setuptools to extract the version with its own logic
+# rather than relying on sys.path being set up to import the local code.
+dynamic.version = {attr = "lyrics.__version__"}
+
+# Explicitly request Setuptools (currently unnecessary, but good practice).
+[build-system]
+# Determining an exact minimum required version might require experimentation.
+# However, for a simple pure-Python project there is no good reason for
+# even relatively old versions to fail.
+# This choice is a common default recommendation due to the timing when
+# pyproject.toml was introduced.
+requires = ["setuptools>=40.8.0"]
+build-backend = "setuptools.build_meta"
