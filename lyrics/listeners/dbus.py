@@ -50,6 +50,7 @@ class DbusListener(PlayerBase):
         self.session_bus: MessageBus = None
 
         self.object_path = '/org/mpris/MediaPlayer2'
+        self.wait_task = None
 
     async def get_service_interface(self, bus_name) -> tuple[ProxyInterface, ProxyInterface]:
         ''' get player interfaces
@@ -159,6 +160,10 @@ class DbusListener(PlayerBase):
             playback_status = parse_variant_to_dict(playback_status)
             self.running = (playback_status == 'Playing')
 
+        if not self.running and self.wait_task is None:
+            await self.clear_player_and_wait()
+            return
+
         if metadata is None:
             Logger.info('metadata is None')
             await self.controller.update_track(playback_status, None)
@@ -172,6 +177,18 @@ class DbusListener(PlayerBase):
             return
 
         await self.controller.update_track(playback_status, track_data)
+
+    async def clear_player_and_wait(self):
+        await self.stop_listner()
+        self.playing = False
+
+        if self.autoswitch:
+            self.player_object = None
+            self.player_properties = None
+
+        self.wait_task = asyncio.create_task(self.main())
+        await self.wait_task
+        self.wait_task = None
 
     def parse_metadata(self, metadata) -> dict:
         ''' parses dbus changed metadata
@@ -277,8 +294,8 @@ class DbusListener(PlayerBase):
     async def wait_for_player(self):
         ''' waits for player to be running
         '''
-        await self.check_playing()
-        while not self.running:
+        while not await self.check_playing():
+            Logger.info('player is not running, waiting...')
             await asyncio.sleep(self.timeout)
             await self.set_interfaces()
 

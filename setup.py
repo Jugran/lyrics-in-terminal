@@ -78,7 +78,7 @@ setup(
         'mpd': ['python-mpd2'],
         'full': ['python-mpd2']
     },
-    python_requires='>=3.7',
+    python_requires='>=3.10',
     cmdclass={
         'install': PostInstallConfigUpdate
     },
