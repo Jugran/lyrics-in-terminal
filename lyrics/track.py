@@ -95,15 +95,12 @@ class Track:
         self.task = asyncio.create_task(
             self._update_lyrics(cycle_source, cache))
 
-        # TODO:Move this to background thread
         await self.task
 
     async def _update_lyrics(self, cycle_source=False, cache=True):
         ''' loads lyrics from source
         '''
         self.status = Status.LOADING
-        if self.trackid is None:
-            return
 
         if cycle_source:
             self.next_source()
@@ -215,6 +212,9 @@ class Track:
             lyrics = utils.wrap_text(self.lyrics, width)
         else:
             lyrics = self.lyrics
+
+        if len(lyrics) == 0:
+            lyrics = ['Lyrics not found in ' + str(self.source) + ' :(']
 
         self.width = len(max(lyrics, key=len))
         self.length = len(lyrics)

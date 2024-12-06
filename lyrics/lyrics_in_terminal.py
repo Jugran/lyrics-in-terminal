@@ -8,6 +8,7 @@ import traceback
 import sys
 
 import _curses
+from lyrics.display.input import InputManager
 
 from lyrics.listeners.base import PlayerBase
 from lyrics.listeners.dbus import DbusListener
@@ -19,12 +20,14 @@ from lyrics import Logger
 
 
 class LyricsInTerminal:
-    def __init__(self, stdscr: "_curses._CursesWindow|None" = None, stdout_mode=False):
+    def __init__(self, stdscr: "_curses._CursesWindow" = None, stdout_mode=False):
         self.stdscr = stdscr
-        self.player: PlayerBase = None
-        self.window: Window = None
-        self.track: Track = None
+        self.player: PlayerBase | None = None
+        self.window: Window | None = None
+        self.track: Track | None = None
+        self.input_manager: InputManager | None = None
         self.tasks = None
+        self.timeout = -1
 
         if stdout_mode:
             return
@@ -38,7 +41,7 @@ class LyricsInTerminal:
         defaults = Config('OPTIONS')
 
         player_name = defaults['player'].strip()
-        autoswitch = defaults.getboolean('autoswitch')
+        autoswitch = defaults.getboolean('autoswitch', False)
 
         align = defaults['alignment']
 
@@ -49,34 +52,36 @@ class LyricsInTerminal:
         else:
             align = 1
 
-        interval = defaults['interval']
+        self.timeout = int(defaults['interval'])
         mpd_connect = [defaults['mpd_host'],
                        defaults['mpd_port'], defaults['mpd_pass']]
 
         source = defaults['source']
         source = Source(source)
 
+        self.input_manager = InputManager(controller=self)
+
         self.track = Track(self, align=align, default_source=source)
 
         # TODO: add os platform check here
         self.player = DbusListener(controller=self, name=player_name,
                                    source=source, autoswitch=autoswitch,
-                                   timeout=interval,
+                                   timeout=self.timeout,
                                    track=self.track)
-        self.window = Window(controller=self, stdscr=self.stdscr,
-                             track=self.track)
+        self.window = Window(controller=self, track=self.track)
 
     async def start(self):
         Logger.info('Starting lyrics pager...')
 
+        self.window.main()
         self.tasks = asyncio.gather(
-            self.window.main(),
             self.player.main(),
+            self.input_manager.main()
         )
 
         await self.tasks
 
-    def stdout_lyrics(self):
+    async def stdout_lyrics(self):
         Logger.info('STDOUT lyrics mode...')
         try:
             artist = sys.argv[2].strip()
@@ -87,7 +92,7 @@ class LyricsInTerminal:
             exit(1)
 
         track = Track(None, artist=artist, title=title)
-        track.update_lyrics()
+        await track._update_lyrics()
 
         print(track.track_name)
         print('-' * track.width, '\n')
@@ -102,15 +107,19 @@ class LyricsInTerminal:
         if self.tasks is not None:
             self.tasks.cancel()
 
+    def reinitialize_screen(self):
+        Logger.info('Reinitializing screen...')
+        self.stdscr = curses.initscr()
+        self.window.main()
+
     async def update_track(self, playback_status=None, metadata=None):
         Logger.info(f'Updating track...{playback_status} {metadata}')
         if playback_status is not None:
             pass
 
         if metadata is not None:
-            # TODO: cancel previous fetch task if exists
             self.track.update(**metadata)
-            self.window.refresh_screen(titlebar_only=True)
+            self.window.refresh_titlebar()
             await self.track.update_lyrics()
 
 
@@ -141,7 +150,7 @@ def init_pager(stdscr=None):
 def main():
     if len(sys.argv) >= 2 and sys.argv[1] == '-t':
         lyrics = LyricsInTerminal(stdout_mode=True)
-        lyrics.stdout_lyrics()
+        asyncio.run(lyrics.stdout_lyrics())
     else:
         init_pager()
 

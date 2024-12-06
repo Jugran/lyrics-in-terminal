@@ -37,13 +37,13 @@ class Config:
     def items(self):
         return [(k, v) for k,v in self.dict.items()]
     
-    def getboolean(self, entry):
+    def getboolean(self, entry, default) -> bool:
         try:
             config = ConfigParser()
             config.read(self.filepath)
             return config[self.section].getboolean(entry)
         except Exception as e:
-            pass
+            return default
 
     def load(self):
         try:
