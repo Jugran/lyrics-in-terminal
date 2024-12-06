@@ -11,6 +11,8 @@ import os
 import tempfile
 import re
 import requests
+from pathlib import Path
+import sys
 
 
 url = 'https://www.google.com/search?q='
@@ -169,23 +171,123 @@ def parse_google(html: str) -> List[str] | None:
     return lyrics_lines
 
 
-def get_filename(track_name):
+def parse_lrc_line(line: str) -> List[Tuple[float, str]]:
+    """Parse a single LRC line and return list of (timestamp, lyrics) pairs.
+    
+    Args:
+        line: A line from LRC file, possibly with multiple timestamps
+              e.g. "[00:12.34][00:15.67]Lyrics text"
+        
+    Returns:
+        List of tuples (timestamp in seconds, lyrics text)
+    """
+    if not line or not line.startswith('['):
+        return []
+    
+    try:
+        # Find all timestamps in the line
+        timestamps = []
+        lyrics_text = line
+        
+        while lyrics_text.startswith('['):
+            bracket_end = lyrics_text.find(']')
+            if bracket_end == -1:
+                break
+                
+            timestamp_str = lyrics_text[1:bracket_end]  # "00:12.34"
+            
+            try:
+                if ':' in timestamp_str:
+                    minutes, seconds = timestamp_str.split(':')
+                    total_seconds = float(minutes) * 60 + float(seconds)
+                    timestamps.append(total_seconds)
+            except ValueError:
+                pass  # Skip invalid timestamps
+                
+            lyrics_text = lyrics_text[bracket_end + 1:]
+        
+        lyrics_text = lyrics_text.strip()
+        if not lyrics_text or not timestamps:
+            return []
+            
+        # Return a pair for each timestamp with the same lyrics
+        return [(ts, lyrics_text) for ts in timestamps]
+        
+    except Exception as e:
+        return []
+
+
+def get_filename(track_name, lrc=False):
     '''returns name of cache file name from track name with correct format
+    
+    Args:
+        track_name: track name in format "artist - title"
+        lrc: if True, look for .lrc file instead of plain lyrics
     '''
+    # Clean up leading/trailing spaces and hyphens
+    filename = track_name.strip(' -')
+    
     # removing text in brackets [] ()
-    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip()
+    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', filename).strip()
+    
+    # Remove spaces and special characters
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
-    return os.path.join(CACHE_PATH, filename)
+    # Add .lrc extension if needed
+    if lrc:
+        filename = filename + '.lrc'
+    
+    # Build full path
+    full_path = os.path.join(CACHE_PATH, filename)
+    return full_path
 
 
-def get_lyrics(track_name: str, source: str = 'any', cache: bool = True) -> Tuple[List[str], str | None]:
-    ''' returns tuple of list of strings with lines of lyrics and found source
+def get_lyrics(track_name: str, source: str = 'any', cache: bool = True) -> Tuple[List[str], List[float] | None, str | None]:
+    ''' returns tuple of list of strings with lines of lyrics, timestamps and found source
         also reads/write to cache file | if cache=True
 
         track_name -> track name in format "artist - title"
         source -> source to fetch lyrics from ('google', 'azlyrics', 'genius', 'any')
         cache -> bool | whether to check lyrics from cache or not.
+        
+        Returns:
+            Tuple of (lyrics_list, timestamps_list, source)
+            timestamps_list will be None for non-LRC sources
     '''
+   
+    # Clean up track name for searching
+    search_name = track_name.strip(' -')
+    
+    # First check for .lrc file
+    lrc_path = get_filename(track_name, lrc=True)
+    
+    if os.path.isfile(lrc_path):
+        with open(lrc_path, 'r', encoding='utf-8') as file:
+            lrc_lines = file.read().splitlines()
+            
+            # Parse LRC lines with timestamps
+            timed_lyrics = []
+            for line in lrc_lines:
+                results = parse_lrc_line(line)
+                timed_lyrics.extend(results)  # Add all timestamp-lyric pairs
+            
+            if timed_lyrics:
+                # Sort by timestamp and remove duplicates
+                timed_lyrics.sort(key=lambda x: x[0])
+                
+                # Keep track of unique lyrics while preserving order
+                seen_lyrics = {}  # text -> timestamp
+                lyrics_list = []
+                timestamps_list = []
+                
+                for timestamp, text in timed_lyrics:
+                    if text not in seen_lyrics:
+                        seen_lyrics[text] = timestamp
+                        lyrics_list.append(text)
+                        timestamps_list.append(timestamp)
+                
+                return (lyrics_list, timestamps_list, 'lrc')
+    
+    # Check regular lyrics cache
     filepath = get_filename(track_name)
 
     if not os.path.isdir(CACHE_PATH):
@@ -197,7 +299,7 @@ def get_lyrics(track_name: str, source: str = 'any', cache: bool = True) -> Tupl
         # cache lyrics exist
         with open(filepath) as file:
             lyrics_lines = file.read().splitlines()
-        return lyrics_lines, 'cache'
+        return (lyrics_lines, None, 'cache')
 
     search_url = url + query(track_name)
     html = get_html(search_url)

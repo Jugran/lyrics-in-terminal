@@ -16,6 +16,7 @@ class Track:
         self.width = width
         self.length = 0
         self.lyrics = []
+        self.timestamps = []  # List of timestamps corresponding to lyrics lines
         self.source = None
         self.album = None
         self.trackid = None
@@ -73,13 +74,52 @@ class Track:
         else:
             source = 'any'
 
-        self.lyrics, self.source = util.get_lyrics(self.track_name, source, cache=cache)
-        self.width = len(max(self.lyrics, key=len))
+        result = util.get_lyrics(self.track_name, source, cache=cache)
+        if len(result) == 3:  # New format with timestamps
+            self.lyrics, self.timestamps, self.source = result
+        else:  # Old format compatibility
+            self.lyrics, self.source = result
+            self.timestamps = None
+            
+        self.width = len(max(self.lyrics, key=len)) if self.lyrics else 0
+        self.length = len(self.lyrics)
+
+    def set_lyrics_with_timestamps(self, lyrics_list, timestamps_list):
+        """Set lyrics and their corresponding timestamps.
+        
+        Args:
+            lyrics_list: List of lyrics lines
+            timestamps_list: List of timestamps (in seconds) for each line
+        """
+        self.lyrics = lyrics_list
+        self.timestamps = timestamps_list
+        self.length = len(self.lyrics)
+        if self.lyrics:
+            self.reset_width()
+
+    def refresh_lyrics(self, source='any', cache=True, cycle_source=False):
+        ''' refresh lyrics from source
+        '''
+        if cycle_source and self.source in self.sources:
+            i = self.sources.index(self.source) + 1
+            source = self.sources[i % len(self.sources)]
+
+        result = util.get_lyrics(self.track_name, source, cache=cache)
+        if len(result) == 3:  # New format with timestamps
+            self.lyrics, self.timestamps, self.source = result
+        else:  # Old format compatibility
+            self.lyrics, self.source = result
+            self.timestamps = None
+            
+        self.width = len(max(self.lyrics, key=len)) if self.lyrics else 0
         self.length = len(self.lyrics)
 
     def get_text(self, wrap=False, width=0):
         ''' returns lyrics text seperated by '\\n'
         '''
+        if not self.lyrics:
+            return ''
+            
         if wrap:
             lyrics=util.wrap_text(self.lyrics, width)
         else:
