@@ -1,7 +1,6 @@
 import curses
 
 from lyrics.config import Config
-from lyrics.track import Track
 from lyrics import Logger
 
 from typing import TYPE_CHECKING
@@ -296,9 +295,10 @@ class Window:
                 key = self.stdscr.getch()
                 self.find_check_keys(key, lines_map)
 
-        # clear search line
+        # reset window
         self.stdscr.clear()
         self.stdscr.timeout(self.timeout)
+        self.controller.reinitialize_screen()
 
     def update_track(self):
         """
