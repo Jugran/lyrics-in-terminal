@@ -239,8 +239,7 @@ def get_synced_lyrics(artist_name, track_name) -> Tuple[List[str] | None, List[s
     lyrics = None
     synced_ly = None
     if ly.get("instrumental", False):
-        lyrics = "instrumental "
-        return (lyrics, None)
+        return (None, None)
 
     synced_ly = ly.get("syncedLyrics", None)
     if synced_ly is None:

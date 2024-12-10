@@ -7,7 +7,6 @@ from lyrics import __version__
 
 import curses
 from lyrics import util
-import time
 
 class Key:
 	def __init__(self):
@@ -30,6 +29,11 @@ class Key:
 		elif key == self.binds['cycle-source']:
 			window.player.refresh(cycle_source=True, cache=False)
 			window.current_pos = 0
+			if window.player.track.source == 'lrc':
+				window.stdscr.timeout(100) # 100ms timout for lrc
+			else:
+				self.last_highlight = -1
+				window.stdscr.timeout(window.timeout)
 			window.update_track(True)
 			
 		# keys to change alignment
@@ -144,9 +148,8 @@ class Window:
 		self.text_padding = 5
 		self.keys = Key()
 		self.find_position = 0
-		self.timeout = 100  # Fixed timeout for smoother updates
+		self.timeout = timeout
 		self.last_highlight = -1  # Track last highlighted line
-		self.last_update = 0  # Track last display update time
         
 		curses.use_default_colors()
 		self.stdscr.timeout(self.timeout)
@@ -178,6 +181,8 @@ class Window:
 	def set_statusbar(self):
 		if self.options['statusbar'] == 'on':
 			lines = self.player.track.length
+			if lines == 0:
+				return
 			if self.current_pos < 0:
 				self.current_pos = 0
 			pct_progress = f' {round(self.current_pos * 100 / lines) + 1}% '
@@ -355,10 +360,31 @@ class Window:
 		if not text:
 			return
 
+		if self.player.track.source == 'lrc':
+			self.update_synced_track(text)
+			self.stdscr.timeout(100)
+		else:
+			pad_height = max(self.height, self.player.track.length) + 2
+			pad_width = max(self.width, self.player.track.width) + 2
+
+			self.scroll_pad.resize(pad_height, pad_width)
+			self.scroll_pad.addstr(text)
+			self.stdscr.timeout(self.timeout)
+
+		# Show source if requested
+		if show_source:
+			self.stdscr.addstr(self.height - 1, 1,
+						f" Source: {self.player.track.source}", curses.A_REVERSE)
+		self.set_titlebar()
+		self.set_statusbar()
+		self.set_offset()
+
+	def update_synced_track(self, text):
+
 		lines = text.split('\n')
 		if not lines:
 			return
-            
+
 		# Align all lines according to current alignment
 		aligned_lines = util.align(lines, self.width - 2, self.player.track.alignment)
             
@@ -401,16 +427,9 @@ class Window:
 			except curses.error:
 				pass
 
-		# Show source if requested
-		if show_source:
-			self.stdscr.addstr(self.height - 1, 1,
-                    f" Source: {self.player.track.source}", curses.A_REVERSE)
-		self.set_titlebar()
-		self.set_statusbar()
-		self.set_offset()
+		
 	def main(self):
 		key = ''
-		last_lrc_update = time.time()
         
 		while key != self.keys.binds['quit']:
 			key = self.stdscr.getch()
@@ -422,13 +441,11 @@ class Window:
 					self.current_pos = 0
 					self.update_track()
 				# Update display every 100ms for LRC files
-				elif (self.player.running and 
-				      self.player.track.timestamps and 
-				      self.player.track.source == 'lrc' and 
-				      time.time() - last_lrc_update >= 0.1):
+				elif (self.player.running and
+				      self.player.track.timestamps and
+				      self.player.track.source == 'lrc'):
 					self.update_track()
-					last_lrc_update = time.time()
-					
+
 			if self.player.running:
 				self.keys.input(self, key)
 
