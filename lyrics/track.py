@@ -45,6 +45,10 @@ class Track:
         self.status = Status.IDLE
         self.task = None
 
+    @property
+    def window(self):
+        return self.controller.window
+
     def __str__(self):
         ''' trackname in format "{artist} - {title}"
         '''
@@ -83,8 +87,6 @@ class Track:
         self.title = title
         self.album = album
         self.trackid = trackid
-        # self.art_url = art_url
-        # self.get_lyrics()
 
     async def update_lyrics(self, cycle_source=False, cache=True):
         ''' updates lyrics from source
@@ -113,10 +115,10 @@ class Track:
         self.set_lyrics(lyrics, source)
         self.status = Status.LOADED
 
-        if self.controller is not None:
+        if self.window is not None:
             Logger.debug('Refreshing screen...')
-            self.controller.window.update_track()
-            self.controller.window.add_notif(f'Source: {self.source}')
+            self.window.update_track()
+            self.window.add_notif(f'Source: {self.source}')
 
     async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str] | None, Source | None]:
         ''' returns tuple of list of strings with lines of lyrics and found source
@@ -146,7 +148,7 @@ class Track:
         found_source = None
 
         # cycle though each source if lyrics not found if source is not 'any'
-        # else gt source from specified source
+        # else get source from specified source
         if source == Source.GOOGLE or source == Source.ANY:
             lyrics_lines = google.parse_lyrics(search_html)
             found_source = Source.GOOGLE if lyrics_lines is not None else None

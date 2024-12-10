@@ -1,9 +1,5 @@
 import curses
-import asyncio
 
-import _curses
-
-from lyrics.display.input import InputManager
 from lyrics.config import Config
 from lyrics.track import Track
 from lyrics import Logger
@@ -15,19 +11,33 @@ if TYPE_CHECKING:
 
 
 class Window:
-    def __init__(self, controller: "LyricsInTerminal", track: Track):
+    def __init__(self, controller: "LyricsInTerminal"):
         self.options = Config('OPTIONS')
         self.controller = controller
-        self.track = track
         self.height, self.width = controller.stdscr.getmaxyx()
         self.scroll_pad = curses.newpad(self.track.length + 2,
                                         self.track.width + 2)
         self.current_pos = 0
         self.pad_offset = 1
         self.text_padding = 5
-        self.keys = controller.input_manager
         self.find_position = 0
         self.timeout = -1
+
+    @property
+    def track(self):
+        return self.controller.track
+
+    @property
+    def input(self):
+        return self.controller.input_manager
+
+    @property
+    def player(self):
+        return self.controller.player
+    
+    @property
+    def stdscr(self):
+        return self.controller.stdscr
 
     def set_up(self):
         """
@@ -48,7 +58,7 @@ class Window:
         curses.curs_set(0)
         self.current_pos = 0
 
-        if self.controller.player.running:
+        if self.player.running:
             self.refresh(refresh_titlebar=True, clear=True)
         else:
             self.show_not_running()
@@ -66,10 +76,10 @@ class Window:
         """
         track_info = self.track.track_info(self.width - 1)
         # track_info -> ['title', 'artist', 'album'] - all algined
-        self.controller.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
-        self.controller.stdscr.addstr(1, 1, track_info[1],
+        self.stdscr.addstr(0, 1, track_info[0], curses.A_REVERSE)
+        self.stdscr.addstr(1, 1, track_info[1],
                            curses.A_REVERSE | curses.A_BOLD | curses.A_DIM)
-        self.controller.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE)
+        self.stdscr.addstr(2, 1, track_info[2], curses.A_REVERSE)
 
     def set_statusbar(self):
         if self.options['statusbar'] != 'on':
@@ -80,13 +90,13 @@ class Window:
             self.current_pos = 0
         pct_progress = f' {
             round(self.current_pos * 100 / lines) + 1}% '
-        self.controller.stdscr.insstr(self.height - 1, self.width -
+        self.stdscr.insstr(self.height - 1, self.width -
                            len(pct_progress), pct_progress, curses.A_DIM)
 
     def add_notif(self, text: str):
         text = f" {text} "
-        self.controller.stdscr.addstr(self.height - 1, 1, text, curses.A_REVERSE)
-        self.controller.stdscr.refresh()
+        self.stdscr.addstr(self.height - 1, 1, text, curses.A_REVERSE)
+        self.stdscr.refresh()
 
     def set_offset(self):
         """
@@ -124,9 +134,9 @@ class Window:
             self.current_pos += step
         else:
             self.current_pos = self.track.length - 1
-            self.controller.stdscr.move(self.height - 1, 0)
-            self.controller.stdscr.clrtoeol()
-            self.controller.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
+            self.stdscr.move(self.height - 1, 0)
+            self.stdscr.clrtoeol()
+            self.stdscr.addstr(self.height - 1, 1, 'END', curses.A_REVERSE)
 
     def scroll_up(self, step=1):
         """
@@ -141,55 +151,55 @@ class Window:
         if self.current_pos > 0:
             if self.current_pos >= self.track.length - \
                     (self.height * 0.5):
-                self.controller.stdscr.move(self.height - 1, 0)
-                self.controller.stdscr.clrtoeol()
+                self.stdscr.move(self.height - 1, 0)
+                self.stdscr.clrtoeol()
             self.current_pos -= step
 
     def find_check_keys(self, key=None, lines_map=[]):
-        if key == self.keys.binds['find-next']:
-            self.controller.stdscr.addstr(self.height - 1, self.width - 3, 'n ')
-            self.controller.stdscr.clrtoeol()
+        if key == self.input.binds['find-next']:
+            self.stdscr.addstr(self.height - 1, self.width - 3, 'n ')
+            self.stdscr.clrtoeol()
             # reached end of matches, loop back to start
             if self.find_position + 1 >= len(lines_map):
                 self.find_position = 0
             else:
                 self.find_position += 1
             return True
-        elif key == self.keys.binds['find-prev']:
-            self.controller.stdscr.addstr(self.height - 1, self.width - 3, 'p ')
-            self.controller.stdscr.clrtoeol()
+        elif key == self.input.binds['find-prev']:
+            self.stdscr.addstr(self.height - 1, self.width - 3, 'p ')
+            self.stdscr.clrtoeol()
             if self.find_position - 1 < 0:
                 self.find_position = len(lines_map) - 1
             else:
                 self.find_position -= 1
             return True
         # other keys for more accessibility
-        elif key == self.keys.binds['down']:
+        elif key == self.input.binds['down']:
             self.scroll_down()
-        elif key == self.keys.binds['up']:
+        elif key == self.input.binds['up']:
             self.scroll_up()
-        elif key == self.keys.binds['step-down']:
-            self.scroll_down(self.keys.binds['step-size'])
-        elif key == self.keys.binds['step-up']:
-            self.scroll_up(self.keys.binds['step-size'])
-        elif key == self.keys.binds['find']:
+        elif key == self.input.binds['step-down']:
+            self.scroll_down(self.input.binds['step-size'])
+        elif key == self.input.binds['step-up']:
+            self.scroll_up(self.input.binds['step-size'])
+        elif key == self.input.binds['find']:
             self.find()
         return False
 
     def find(self):
         # wait for input
-        self.controller.stdscr.timeout(-1)
+        self.stdscr.timeout(-1)
         prompt = ':'
-        self.controller.stdscr.move(self.height - 1, 0)
-        self.controller.stdscr.clrtoeol()
-        self.controller.stdscr.addstr(self.height - 1, self.pad_offset, prompt)
+        self.stdscr.move(self.height - 1, 0)
+        self.stdscr.clrtoeol()
+        self.stdscr.addstr(self.height - 1, self.pad_offset, prompt)
         self.set_statusbar()
         # show cursor and key presses during find
         curses.echo()
         curses.curs_set(1)
 
         # (y, x, input max length), case-insensitive
-        find_string = self.controller.stdscr.getstr(
+        find_string = self.stdscr.getstr(
             self.height - 1, len(prompt) + self.pad_offset, 100)
         find_string = find_string.decode(encoding="utf-8").strip()
 
@@ -227,9 +237,9 @@ class Window:
                     self.current_pos = lines_map[self.find_position]
 
                     # duplicated from main() to manually refresh on find
-                    self.controller.stdscr.clear()
+                    self.stdscr.clear()
                     self.set_titlebar()
-                    self.controller.stdscr.refresh()
+                    self.stdscr.refresh()
                     self.scroll_pad.refresh(
                         self.current_pos, 0, 4, self.pad_offset, self.height - 2, self.width - 1)
 
@@ -237,15 +247,15 @@ class Window:
                     find_string_output = f' {find_string} '
                     find_count_output = f" {
                         self.find_position + 1}/{len(lines_map)} "
-                    self.controller.stdscr.addstr(
+                    self.stdscr.addstr(
                         self.height - 1, self.pad_offset, find_string_output, curses.A_REVERSE)
-                    self.controller.stdscr.insstr(
+                    self.stdscr.insstr(
                         self.height - 1, self.pad_offset + len(find_string_output) + 1, find_count_output)
                     # multiple matches, show next/prev
                     if len(lines_map) > 1:
                         help_output = f"[{chr(
-                            self.keys.binds['find-next'])}]=next, [{chr(self.keys.binds['find-prev'])}]=prev"
-                        self.controller.stdscr.addstr(self.height - 1, self.pad_offset + len(
+                            self.input.binds['find-next'])}]=next, [{chr(self.input.binds['find-prev'])}]=prev"
+                        self.stdscr.addstr(self.height - 1, self.pad_offset + len(
                             find_string_output) + len(find_count_output) + 2, help_output)
                     self.set_statusbar()
 
@@ -265,29 +275,29 @@ class Window:
                         # inside string
                         elif highlight_end > cpos:
                             attr = curses.A_REVERSE
-                        self.controller.stdscr.addch(
+                        self.stdscr.addch(
                             4, self.pad_offset + cpos, char, attr)
 
                     # after finding a match in a line, stop, wait for input
-                    self.controller.stdscr.timeout(10000)
-                    key = self.controller.stdscr.getch()
+                    self.stdscr.timeout(10000)
+                    key = self.stdscr.getch()
                     result = self.find_check_keys(key, lines_map)
                     if not result:
                         break
 
             else:
                 output = ' not found '
-                self.controller.stdscr.insstr(self.height - 1, self.pad_offset +
+                self.stdscr.insstr(self.height - 1, self.pad_offset +
                                    len(prompt) + len(find_string) + 2, output, curses.A_REVERSE)
                 self.set_statusbar()
                 # timeout or key press
-                self.controller.stdscr.timeout(5000)
-                key = self.controller.stdscr.getch()
+                self.stdscr.timeout(5000)
+                key = self.stdscr.getch()
                 self.find_check_keys(key, lines_map)
 
         # clear search line
-        self.controller.stdscr.clear()
-        self.controller.stdscr.timeout(self.timeout)
+        self.stdscr.clear()
+        self.stdscr.timeout(self.timeout)
 
     def update_track(self):
         """
@@ -301,7 +311,7 @@ class Window:
             None
         """
         Logger.info("Updating track display...")
-        self.height, self.width = self.controller.stdscr.getmaxyx()
+        self.height, self.width = self.stdscr.getmaxyx()
         self.scroll_pad.clear()
         self.current_pos = 0
 
@@ -323,28 +333,28 @@ class Window:
     def refresh_titlebar(self):
         # TODO: make titlebar separate widget
         self.set_titlebar()
-        self.controller.stdscr.refresh()
+        self.stdscr.refresh()
         return
 
     def refresh(self, refresh_titlebar=True ,clear=False):
-        self.height, self.width = self.controller.stdscr.getmaxyx()
+        self.height, self.width = self.stdscr.getmaxyx()
 
         if clear:
-            self.controller.stdscr.clear()
+            self.stdscr.clear()
         
         if refresh_titlebar:
             self.set_titlebar()
 
         self.set_statusbar()
-        self.controller.stdscr.refresh()
+        self.stdscr.refresh()
         self.scroll_pad.refresh(self.current_pos, 0, 4,
                                 self.pad_offset, self.height - 2, self.width - 1)
 
     def show_not_running(self):
-        self.controller.stdscr.clear()
-        self.controller.stdscr.addstr(
-            0, 1, f'{self.controller.player.player_name} player is not running.')
-        self.controller.stdscr.refresh()
+        self.stdscr.clear()
+        self.stdscr.addstr(
+            0, 1, f'{self.player.player_name} player is not running.')
+        self.stdscr.refresh()
 
     # TODO: create logger annotation to log entry exit and errors
     def main(self):

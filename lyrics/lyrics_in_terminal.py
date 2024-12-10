@@ -66,9 +66,8 @@ class LyricsInTerminal:
         # TODO: add os platform check here
         self.player = DbusListener(controller=self, name=player_name,
                                    source=source, autoswitch=autoswitch,
-                                   timeout=self.timeout,
-                                   track=self.track)
-        self.window = Window(controller=self, track=self.track)
+                                   timeout=self.timeout)
+        self.window = Window(controller=self)
 
     async def start(self):
         Logger.info('Starting lyrics pager...')

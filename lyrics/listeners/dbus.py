@@ -34,7 +34,7 @@ def parse_variant_to_dict(variant):
 
 
 class DbusListener(PlayerBase):
-    def __init__(self, controller: "LyricsInTerminal", name: str, source: Source, autoswitch: bool, timeout: int, track: "Track"):
+    def __init__(self, controller: "LyricsInTerminal", name: str, source: Source, autoswitch: bool, timeout: int):
         self.controller = controller
         self.player_name = name
         self.default_source = source
@@ -43,7 +43,6 @@ class DbusListener(PlayerBase):
         self.timeout = timeout / 1000
 
         self.running = False
-        self.track = track
 
         self.player_object: ProxyInterface = None
         self.player_properties: ProxyInterface = None
@@ -51,6 +50,10 @@ class DbusListener(PlayerBase):
 
         self.object_path = '/org/mpris/MediaPlayer2'
         self.wait_task = None
+    
+    @property
+    def track(self):
+        return self.controller.track
 
     async def get_service_interface(self, bus_name) -> tuple[ProxyInterface, ProxyInterface]:
         ''' get player interfaces
