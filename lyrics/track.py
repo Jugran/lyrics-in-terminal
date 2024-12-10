@@ -115,9 +115,13 @@ class Track:
         self.set_lyrics(lyrics, source)
         self.status = Status.LOADED
 
-        if self.window is not None:
-            Logger.debug('Refreshing screen...')
-            self.window.update_track()
+        if self.window is None:
+            return
+
+        Logger.debug('Refreshing screen...')
+        self.window.update_track()
+
+        if len(lyrics) > 2:
             self.window.add_notif(f'Source: {self.source}')
 
     async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str] | None, Source | None]:
