@@ -155,6 +155,7 @@ class Window:
                 self.stdscr.clrtoeol()
             self.current_pos -= step
 
+    # TODO: Move this to InputManager or create search widget separately
     def find_check_keys(self, key=None, lines_map=[]):
         if key == self.input.binds['find-next']:
             self.stdscr.addstr(self.height - 1, self.width - 3, 'n ')

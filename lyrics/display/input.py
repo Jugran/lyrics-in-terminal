@@ -1,6 +1,6 @@
 import asyncio
 import curses
-import _curses
+
 
 from lyrics.config import Config
 from lyrics.display.help import HelpPage
