@@ -8,6 +8,7 @@ from lyrics.window import Window
 
 import sys
 import curses
+import traceback
 
 
 def ErrorHandler(func):
@@ -20,6 +21,7 @@ def ErrorHandler(func):
             print('Please increase terminal window size!')
         except Exception as err:
             print('Unexpected exception occurred.', sys.exc_info(), err)
+            traceback.print_exc()
 
     return wrapper
 
