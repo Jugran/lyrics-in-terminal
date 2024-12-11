@@ -7,6 +7,8 @@ class Source(Enum):
     GENIUS = 'genius'
     AZLYRICS = 'azlyrics'
     GOOGLE = 'google'
+    LIBLRC = 'lrclib'
+    LRC = 'lrc'
     ANY = 'any'
     CACHE = 'cache'
 

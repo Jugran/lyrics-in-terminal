@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from textwrap import wrap
+from typing import List, Tuple
 from lyrics import CACHE_PATH
 
 from subprocess import run
@@ -13,13 +14,29 @@ EDITOR = os.environ.get('EDITOR', 'nano')
 initial_text = b"Add lyrics here!"     # placeholder text for lyrics file
 
 
-def get_filename(track_name):
+
+def get_filename(track_name, lrc=False):
     '''returns name of cache file name from track name with correct format
+
+    Args:
+        track_name: track name in format "artist - title"
+        lrc: if True, look for .lrc file instead of plain lyrics
     '''
+    # Clean up leading/trailing spaces and hyphens
+    filename = track_name.strip(' -')
+
     # removing text in brackets [] ()
-    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', track_name).strip()
+    filename = re.sub(r'(\[.*\].*)|(\(.*\).*)', '', filename).strip()
+
+    # Remove spaces and special characters
     filename = re.sub(r'\s|\/|\\|\.', '', filename)
-    return os.path.join(CACHE_PATH, filename)
+    # Add .lrc extension if needed
+    if lrc:
+        filename = filename + '.lrc'
+
+    # Build full path
+    full_path = os.path.join(CACHE_PATH, filename)
+    return full_path
 
 
 def edit_lyrics(track_name):
@@ -97,3 +114,81 @@ def wrap_text(text, width):
             lines.append(line)
 
     return lines
+
+
+
+
+def parse_lrc_line(line: str) -> List[Tuple[float, str]]:
+    """Parse a single LRC line and return list of (timestamp, lyrics) pairs.
+
+    Args:
+        line: A line from LRC file, possibly with multiple timestamps
+              e.g. "[00:12.34][00:15.67]Lyrics text"
+
+    Returns:
+        List of tuples (timestamp in seconds, lyrics text)
+    """
+    if not line or not line.startswith('['):
+        return []
+
+    try:
+        # Find all timestamps in the line
+        timestamps = []
+        lyrics_text = line
+
+        while lyrics_text.startswith('['):
+            bracket_end = lyrics_text.find(']')
+            if bracket_end == -1:
+                break
+
+            timestamp_str = lyrics_text[1:bracket_end]  # "00:12.34"
+
+            try:
+                if ':' in timestamp_str:
+                    minutes, seconds = timestamp_str.split(':')
+                    total_seconds = float(minutes) * 60 + float(seconds)
+                    timestamps.append(total_seconds)
+            except ValueError:
+                pass  # Skip invalid timestamps
+
+            lyrics_text = lyrics_text[bracket_end + 1:]
+
+        lyrics_text = lyrics_text.strip()
+        if not lyrics_text or not timestamps:
+            return []
+
+        # Return a pair for each timestamp with the same lyrics
+        return [(ts, lyrics_text) for ts in timestamps]
+
+    except Exception as e:
+        return []
+
+
+def format_synced_lyrics(lyrics_lines: List[str]) -> Tuple[List[str], List[float]]:
+    '''Returns a tuple of (lyrics_list, timestamps_list).
+
+    Args:
+        lyrics_lines: List of strings, each string is a line from a LRC file.
+
+    Returns:
+        A tuple of:
+            - lyrics_list: List of strings, each string is a line of lyrics.
+            - timestamps_list: List of floats, each float is a timestamp in seconds.
+            - 'lrc': A string indicating the source of the lyrics.
+    '''
+    lyrics = []
+    for line in lyrics_lines:
+        results = parse_lrc_line(line)
+        lyrics.extend(results)  # Add all timestamp-lyric pairs
+
+    # Sort by timestamp and remove duplicates
+    lyrics.sort(key=lambda x: x[0])
+
+    lyrics_list = []
+    timestamps_list = []
+
+    for timestamp, text in lyrics:
+        lyrics_list.append(text)
+        timestamps_list.append(timestamp)
+
+    return (lyrics_list, timestamps_list)

@@ -38,10 +38,14 @@ class Track:
         self.width = width
         self.length = 0
         self.lyrics = []
+        self.synced_lyrics = []
+        self.timestamps = []  # List of timestamps corresponding to lyrics lines
         self.source = default_source
         self.album = ''
         self.trackid = None
-        self.sources = [Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
+        self.sources = [Source.LIBLRC,
+            Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
+        
         self.status = Status.IDLE
         self.task = None
 
@@ -124,6 +128,42 @@ class Track:
         if len(lyrics) > 2:
             self.window.add_notif(f'Source: {self.source}')
 
+    
+    async def fetch_cache(self, lrc=False):
+        ''' Fetches lyrics from the cache file.
+
+            Args:
+                lrc: bool | if True, attempts to fetch lyrics in LRC format.
+
+            Returns:
+                Tuple containing:
+                - List of lyrics lines if found, otherwise None.
+                - synced lyrics timestamps if lrc is True, otherwise None.
+        '''
+        if not os.path.isdir(CACHE_PATH):
+            os.makedirs(CACHE_PATH)
+            return (None, None)
+
+        filepath = utils.get_filename(self.track_name, lrc=lrc)
+
+        lyrics_lines = None
+
+        if os.path.isfile(filepath):
+            # cache lyrics exist
+            with open(filepath) as file:
+                lyrics_lines = file.read().splitlines()
+
+            lyrics_lines = lyrics_lines if len(lyrics_lines) > 0 else None
+
+        if lyrics_lines is None:
+            return (None, None)
+
+        if lrc:
+            return utils.format_synced_lyrics(lyrics_lines)
+
+        return (lyrics_lines, None)
+
+
     async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str] | None, Source | None]:
         ''' returns tuple of list of strings with lines of lyrics and found source
             also reads/write to cache file | if cache=True
@@ -131,20 +171,25 @@ class Track:
             source -> source to fetch lyrics from ('google', 'azlyrics', 'genius', 'any')
             cache -> bool | whether to check lyrics from cache or not.
         '''
-        filepath = utils.get_filename(self.track_name)
 
-        if not os.path.isdir(CACHE_PATH):
-            os.makedirs(CACHE_PATH)
+        if cache:
+            lyrics_lines, timestamps = await self.fetch_cache()
+            if lyrics_lines is not None:
+                return (lyrics_lines, source)
+
+        if source == Source.LIBLRC or source == Source.ANY:
+            artist, title = self.track_name.split(' - ', 1)
+            synced_lyrics, lyrics = utils.get_synced_lyrics(artist, title)
+
+            if synced_lyrics is not None:
+                return utils.format_synced_lyrics(synced_lyrics) + (Source.LIBLRC,)
+            elif lyrics is not None:
+                filepath = utils.get_filename(self.track_name, lrc=True)
+                with open(filepath, 'w') as file:
+                    file.writelines(lyrics)
+                return (lyrics_lines, None, Source)
 
         lyrics_lines = None
-        # If cache enabled, then return cached lyrics
-        if os.path.isfile(filepath) and cache:
-            # cache lyrics exist
-            with open(filepath) as file:
-                lyrics_lines = file.read().splitlines()
-
-            lyrics_lines = lyrics_lines if len(lyrics_lines) > 0 else None
-            return lyrics_lines, Source.CACHE
 
         google = GoogleSource(self.track_name)
         search_html = await google.extract_html()
@@ -214,6 +259,9 @@ class Track:
     def get_text(self, wrap=False, width=0):
         ''' returns lyrics text seperated by '\\n'
         '''
+        if not self.lyrics:
+            return ''
+            
         if wrap:
             lyrics = utils.wrap_text(self.lyrics, width)
         else:
