@@ -13,13 +13,13 @@ class PlayerBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def set_listner(self) -> None:
+    async def set_listener(self) -> None:
         ''' set player listener
         '''
         raise NotImplementedError()
 
     @abstractmethod
-    async def stop_listner(self) -> None:
+    async def stop_listener(self) -> None:
         ''' stop player listener
         '''
         raise NotImplementedError()
@@ -35,6 +35,12 @@ class PlayerBase(ABC):
     #     ''' fetch player volume on request
     #     '''
 #             raise NotImplementedError()
+
+    @abstractmethod
+    async def get_position(self) -> int:
+        ''' fetch player position on request
+        '''
+        raise NotImplementedError()
 
     @abstractmethod
     async def main(self) -> None:

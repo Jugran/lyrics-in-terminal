@@ -41,6 +41,7 @@ class DbusListener(PlayerBase):
 
         self.autoswitch = autoswitch
         self.timeout = timeout / 1000
+        self.sync_available = False
 
         self.running = False
 
@@ -50,10 +51,33 @@ class DbusListener(PlayerBase):
 
         self.object_path = '/org/mpris/MediaPlayer2'
         self.wait_task = None
-    
+
     @property
     def track(self):
         return self.controller.track
+
+    async def sync_available(self):
+        return await self.get_position() != -1
+
+    async def get_position(self) -> int:
+        """Get current playback position in seconds."""
+        try:
+            if not self.player_object:
+                return -1
+
+            if not self.running:
+                return 0
+
+            # Get position in microseconds
+            position = await self.player_object.get_position()
+
+            # Convert to seconds
+            return float(position) / 1000000
+
+        except Exception as e:
+            Logger.error(f'Error retrieving position for player {
+                         self.player_name}: {e}')
+            return -1
 
     async def get_service_interface(self, bus_name) -> tuple[ProxyInterface, ProxyInterface]:
         ''' get player interfaces
@@ -121,7 +145,7 @@ class DbusListener(PlayerBase):
         '''
 
         if not self.session_bus:
-            self.session_bus = await dbus_next.aio.MessageBus().connect()
+            self.session_bus = await MessageBus().connect()
 
         if self.autoswitch:
             await self.set_active_player()
@@ -182,7 +206,7 @@ class DbusListener(PlayerBase):
         await self.controller.update_track(playback_status, track_data)
 
     async def clear_player_and_wait(self):
-        await self.stop_listner()
+        await self.stop_listener()
         self.playing = False
 
         if self.autoswitch:
@@ -256,10 +280,11 @@ class DbusListener(PlayerBase):
         if self.player_object:
             status = await self.player_object.get_playback_status()
             self.running = (status == 'Playing')
+            self.sync_available = await self.sync_available()
 
         return self.running
 
-    async def set_listner(self):
+    async def set_listener(self):
         ''' sets dbus player properties changed listener
         '''
         if self.player_object is None:
@@ -268,7 +293,7 @@ class DbusListener(PlayerBase):
         self.player_properties.on_properties_changed(self.properties_changed)
         Logger.info('listener started')
 
-    async def stop_listner(self):
+    async def stop_listener(self):
         ''' stops dbus player properties changed listener
         '''
         if self.player_object is None:
@@ -306,4 +331,4 @@ class DbusListener(PlayerBase):
         await self.set_interfaces()
         await self.wait_for_player()
         await self.update_metadata()
-        await self.set_listner()
+        await self.set_listener()
