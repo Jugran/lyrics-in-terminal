@@ -20,6 +20,7 @@ class Window:
         self.pad_offset = 1
         self.text_padding = 5
         self.find_position = 0
+        self.hightlight_position = -1
         self.timeout = -1
 
     @property
@@ -33,10 +34,14 @@ class Window:
     @property
     def player(self):
         return self.controller.player
-    
+
     @property
     def stdscr(self):
         return self.controller.stdscr
+
+    @property
+    def sync_mode(self):
+        return self.track.timestamps and self.player.sync_available
 
     def set_up(self):
         """
@@ -337,12 +342,12 @@ class Window:
         self.stdscr.refresh()
         return
 
-    def refresh(self, refresh_titlebar=True ,clear=False):
+    def refresh(self, refresh_titlebar=True, clear=False):
         self.height, self.width = self.stdscr.getmaxyx()
 
         if clear:
             self.stdscr.clear()
-        
+
         if refresh_titlebar:
             self.set_titlebar()
 

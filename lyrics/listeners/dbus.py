@@ -35,15 +35,9 @@ def parse_variant_to_dict(variant):
 
 class DbusListener(PlayerBase):
     def __init__(self, controller: "LyricsInTerminal", name: str, source: Source, autoswitch: bool, timeout: int):
+        super().__init__(name, source, autoswitch, sync_available=False, running=False)
         self.controller = controller
-        self.player_name = name
-        self.default_source = source
-
-        self.autoswitch = autoswitch
         self.timeout = timeout / 1000
-        self.sync_available = False
-
-        self.running = False
 
         self.player_object: ProxyInterface = None
         self.player_properties: ProxyInterface = None
@@ -56,7 +50,7 @@ class DbusListener(PlayerBase):
     def track(self):
         return self.controller.track
 
-    async def sync_available(self):
+    async def check_sync_available(self):
         return await self.get_position() != -1
 
     async def get_position(self) -> int:
@@ -103,7 +97,6 @@ class DbusListener(PlayerBase):
         except dbus_next.errors.DBusError as e:
             Logger.error(
                 f'Error occured while retrieving player interface: {e}')
-            print("Error occured")
 
     async def set_active_player(self):
         ''' set playing player as active
@@ -280,7 +273,7 @@ class DbusListener(PlayerBase):
         if self.player_object:
             status = await self.player_object.get_playback_status()
             self.running = (status == 'Playing')
-            self.sync_available = await self.sync_available()
+            self.sync_available = await self.check_sync_available()
 
         return self.running
 

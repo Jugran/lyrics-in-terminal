@@ -9,10 +9,10 @@ from subprocess import run
 import os
 import tempfile
 import re
+import aiofiles
 
 EDITOR = os.environ.get('EDITOR', 'nano')
 initial_text = b"Add lyrics here!"     # placeholder text for lyrics file
-
 
 
 def get_filename(track_name, lrc=False):
@@ -37,6 +37,64 @@ def get_filename(track_name, lrc=False):
     # Build full path
     full_path = os.path.join(CACHE_PATH, filename)
     return full_path
+
+
+async def fetch_cache(track_name, lrc=False):
+    ''' Fetches lyrics from the cache file.
+
+        Args:
+            track_name: track name in format "artist - title"
+            lrc: bool | if True, attempts to fetch lyrics in LRC format.
+
+        Returns:
+            Tuple containing:
+            - List of lyrics lines if found, otherwise None.
+            - synced lyrics timestamps if lrc is True, otherwise None.
+    '''
+    if not os.path.isdir(CACHE_PATH):
+        os.makedirs(CACHE_PATH)
+        return (None, None)
+
+    filepath = get_filename(track_name, lrc=lrc)
+
+    lyrics_lines = None
+
+    if not os.path.isfile(filepath):
+        return (None, None)
+
+    # cache lyrics exist
+    async with aiofiles.open(filepath) as file:
+        lyrics = await file.read()
+        lyrics_lines = lyrics.splitlines()
+
+    lyrics_lines = lyrics_lines if len(lyrics_lines) > 0 else None
+
+    if lyrics_lines is None:
+        return (None, None)
+
+    if lrc:
+        return format_synced_lyrics(lyrics_lines)
+
+    return (lyrics_lines, None)
+
+
+async def save_lyrics(track_name, lyrics, timestamps):
+    ''' saves lyrics to cache file
+
+    Args:
+        track_name: track name in format "artist - title"
+        lyrics: list of lyrics lines
+        lrc: bool | if True, saves lyrics in LRC format
+    '''
+    lrc = timestamps is not None
+    filepath = get_filename(track_name, lrc=lrc)
+
+    if lrc:
+        lyrics = [f"[{tm:.2f}] {ly}\n" for tm, ly in zip(timestamps, lyrics)]
+
+    # Open the file asynchronously using aiofiles
+    async with aiofiles.open(filepath, 'w') as file:
+        await file.writelines(lyrics)
 
 
 def edit_lyrics(track_name):
@@ -116,8 +174,6 @@ def wrap_text(text, width):
     return lines
 
 
-
-
 def parse_lrc_line(line: str) -> List[Tuple[float, str]]:
     """Parse a single LRC line and return list of (timestamp, lyrics) pairs.
 
@@ -148,13 +204,15 @@ def parse_lrc_line(line: str) -> List[Tuple[float, str]]:
                     minutes, seconds = timestamp_str.split(':')
                     total_seconds = float(minutes) * 60 + float(seconds)
                     timestamps.append(total_seconds)
+                else:
+                    timestamps.append(float(timestamp_str))
             except ValueError:
                 pass  # Skip invalid timestamps
 
             lyrics_text = lyrics_text[bracket_end + 1:]
 
         lyrics_text = lyrics_text.strip()
-        if not lyrics_text or not timestamps:
+        if not timestamps:
             return []
 
         # Return a pair for each timestamp with the same lyrics

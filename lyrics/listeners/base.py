@@ -1,7 +1,26 @@
 from abc import ABC, abstractmethod
 
+from lyrics.sources import Source
+
 
 class PlayerBase(ABC):
+
+    def __init__(self, name: str, source: Source, autoswitch: bool, sync_available: bool, running: bool) -> None:
+        """
+        Initialize the player base.
+
+        Args:
+            name (str): The name of the player.
+            source (Source): The default source of the player.
+            autoswitch (bool): Whether the player should autoswitch.
+            sync_available (bool): Whether the player supports synced lyrics.
+            running (bool): Whether the player is currently running.
+        """
+        self.player_name = name
+        self.default_source = source
+        self.autoswitch = autoswitch
+        self.sync_available = sync_available
+        self.running = running
 
     @abstractmethod
     async def check_playing(self) -> bool:

@@ -17,6 +17,16 @@ class SourceBase(ABC):
                 resp.raise_for_status()
                 return await resp.text()
 
+    async def fetch_json(self, url: str, params: dict) -> dict:
+        ''' returns json response
+        '''
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                # Ensure that the response status is OK
+                response.raise_for_status()
+                # Parse the JSON response
+                return await response.json()
+
     @abstractmethod
     async def extract_html(self, html: str) -> str | None:
         ''' extracts relavant html from google search html

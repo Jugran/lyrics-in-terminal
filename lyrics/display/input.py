@@ -20,14 +20,18 @@ class InputManager:
     @property
     def stdscr(self):
         return self.controller.stdscr
-    
+
     @property
     def window(self):
         return self.controller.window
-    
+
     @property
     def player(self):
         return self.controller.player
+
+    @property
+    def track(self):
+        return self.controller.track
 
     async def input(self, key):
         """
@@ -60,10 +64,17 @@ class InputManager:
             self.stdscr.erase()
             self.window.refresh()
 
-
         elif key == self.binds['cycle-source']:
             self.window.add_notif('Switching source...')
-            await self.controller.track.update_lyrics(cycle_source=True, cache=False)
+            await self.track.update_lyrics(cycle_source=True, cache=False)
+            if self.track.timestamps and self.player.sync_available:
+                Logger.info("Synced Lyrics available")
+                # start sync mode
+            else:
+                pass
+                # reset sync mode
+                # self.window.last_highlight = -1
+                # self.stdscr.timeout(self.window.timeout)
 
         # keys to change alignment
         elif key == self.binds['left']:
@@ -100,7 +111,7 @@ class InputManager:
         elif key == self.binds['autoswitchtoggle']:
             self.player.autoswitch = not self.player.autoswitch
             self.stdscr.addstr(self.window.height - 1, 1,
-                                          f" Autoswitch: {'on' if self.player.autoswitch else 'off'} ", curses.A_REVERSE)
+                               f" Autoswitch: {'on' if self.player.autoswitch else 'off'} ", curses.A_REVERSE)
 
     async def main(self):
         if self.player.running:
@@ -121,7 +132,5 @@ class InputManager:
                 Logger.debug(f'Key pressed: {key}')
                 await self.input(key)
 
-
         Logger.info('End Input loop...')
         self.controller.quit()
-

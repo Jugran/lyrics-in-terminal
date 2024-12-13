@@ -73,6 +73,7 @@ setup(
     install_requires=[
         'dbus_next',
         'aiohttp',
+        'aiofiles',
     ],
     extras_require={
         'mpd': ['python-mpd2'],

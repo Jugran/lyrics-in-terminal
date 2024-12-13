@@ -10,6 +10,8 @@ from lyrics.sources.google import GoogleSource
 from typing import TYPE_CHECKING
 from enum import Enum
 
+from lyrics.sources.liblrc import LibLRCSource
+
 if TYPE_CHECKING:
     from lyrics.lyrics_in_terminal import LyricsInTerminal
 
@@ -44,8 +46,8 @@ class Track:
         self.album = ''
         self.trackid = None
         self.sources = [Source.LIBLRC,
-            Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
-        
+                        Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
+
         self.status = Status.IDLE
         self.task = None
 
@@ -115,8 +117,8 @@ class Track:
         else:
             source = Source.ANY
 
-        lyrics, source = await self.fetch_lyrics(source, cache=cache)
-        self.set_lyrics(lyrics, source)
+        lyrics, timestamps, source = await self.fetch_lyrics(source, cache=cache)
+        self.set_lyrics(lyrics, timestamps, source)
         self.status = Status.LOADED
 
         if self.window is None:
@@ -128,43 +130,9 @@ class Track:
         if len(lyrics) > 2:
             self.window.add_notif(f'Source: {self.source}')
 
-    
-    async def fetch_cache(self, lrc=False):
-        ''' Fetches lyrics from the cache file.
+        await utils.save_lyrics(self.track_name, lyrics, timestamps)
 
-            Args:
-                lrc: bool | if True, attempts to fetch lyrics in LRC format.
-
-            Returns:
-                Tuple containing:
-                - List of lyrics lines if found, otherwise None.
-                - synced lyrics timestamps if lrc is True, otherwise None.
-        '''
-        if not os.path.isdir(CACHE_PATH):
-            os.makedirs(CACHE_PATH)
-            return (None, None)
-
-        filepath = utils.get_filename(self.track_name, lrc=lrc)
-
-        lyrics_lines = None
-
-        if os.path.isfile(filepath):
-            # cache lyrics exist
-            with open(filepath) as file:
-                lyrics_lines = file.read().splitlines()
-
-            lyrics_lines = lyrics_lines if len(lyrics_lines) > 0 else None
-
-        if lyrics_lines is None:
-            return (None, None)
-
-        if lrc:
-            return utils.format_synced_lyrics(lyrics_lines)
-
-        return (lyrics_lines, None)
-
-
-    async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str] | None, Source | None]:
+    async def fetch_lyrics(self, source: Source, cache: bool = True) -> Tuple[List[str] | None, List[float] | None, Source | None]:
         ''' returns tuple of list of strings with lines of lyrics and found source
             also reads/write to cache file | if cache=True
 
@@ -173,28 +141,33 @@ class Track:
         '''
 
         if cache:
-            lyrics_lines, timestamps = await self.fetch_cache()
+            # Fetch lrc then normal lyrics as source is any for lrcs as well for cache
+            if source == Source.LIBLRC or source == Source.ANY:
+                lyrics_lines, timestamps = await utils.fetch_cache(self.track_name, lrc=True)
+
+            if lyrics_lines is None:
+                lyrics_lines, timestamps = await utils.fetch_cache(self.track_name, lrc=False)
+
             if lyrics_lines is not None:
-                return (lyrics_lines, source)
+                return lyrics_lines, timestamps, Source.CACHE
 
-        if source == Source.LIBLRC or source == Source.ANY:
-            artist, title = self.track_name.split(' - ', 1)
-            synced_lyrics, lyrics = utils.get_synced_lyrics(artist, title)
-
-            if synced_lyrics is not None:
-                return utils.format_synced_lyrics(synced_lyrics) + (Source.LIBLRC,)
-            elif lyrics is not None:
-                filepath = utils.get_filename(self.track_name, lrc=True)
-                with open(filepath, 'w') as file:
-                    file.writelines(lyrics)
-                return (lyrics_lines, None, Source)
+        # Cache not found
 
         lyrics_lines = None
+        found_source = None
+        timestamps = None
+
+        if source == Source.LIBLRC or source == Source.ANY:
+            liblrc_source = LibLRCSource()
+            lyrics_lines, timestamps = await liblrc_source.get_lyrics(self.track_name)
+            found_source = Source.LIBLRC if lyrics_lines else None
+
+        if found_source:
+            Logger.debug(f'Lyrics found - {found_source}, {self.track_name}')
+            return lyrics_lines, timestamps, found_source
 
         google = GoogleSource(self.track_name)
         search_html = await google.extract_html()
-
-        found_source = None
 
         # cycle though each source if lyrics not found if source is not 'any'
         # else get source from specified source
@@ -217,12 +190,13 @@ class Track:
             return None, source
 
         Logger.debug(f'Lyrics found - {found_source}, {self.track_name}')
-        return lyrics_lines, found_source
+        return lyrics_lines, timestamps, found_source
 
-    def set_lyrics(self, lyrics: List[str] | None, source: Source, save=True):
+    def set_lyrics(self, lyrics: List[str] | None, timestamps: List[float] | None, source: Source):
         ''' set lyrics and source for track
 
             lyrics -> list of strings
+            timestamps -> list of timestamps
             source -> source to fetch lyrics from ('google', 'azlyrics', 'genius', 'any')
             save -> bool | whether to save lyrics to cache
         '''
@@ -231,19 +205,13 @@ class Track:
 
         if lyrics is None:
             lyrics = ['Lyrics not found in ' + str(source) + ' :(']
-            save = False
 
+        self.timestamps = timestamps
         self.lyrics = lyrics
 
         Logger.debug(f'Lyrics set - {self.lyrics}, {self.source}')
         self.width = len(max(self.lyrics, key=len))
         self.length = len(self.lyrics)
-
-        if save:
-            filepath = utils.get_filename(self.track_name)
-            with open(filepath, 'w') as file:
-                text = '\n'.join(self.lyrics)
-                file.write(text)
 
     def next_source(self):
         ''' cycle to next source
@@ -261,7 +229,7 @@ class Track:
         '''
         if not self.lyrics:
             return ''
-            
+
         if wrap:
             lyrics = utils.wrap_text(self.lyrics, width)
         else:
