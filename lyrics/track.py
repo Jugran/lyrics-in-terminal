@@ -47,7 +47,6 @@ class Track:
         self.trackid = None
         self.sources = [Source.LIBLRC,
                         Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
-
         self.status = Status.IDLE
         self.task = None
 
