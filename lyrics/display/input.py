@@ -114,17 +114,11 @@ class InputManager:
                                f" Autoswitch: {'on' if self.player.autoswitch else 'off'} ", curses.A_REVERSE)
 
     async def main(self):
-        if self.player.running:
-            self.stdscr.timeout(-1)
-        else:
-            self.stdscr.timeout(200)
-
         await self.loop()
 
     async def loop(self):
         Logger.info('Start Input loop...')
         key = ''
-        self.stdscr.timeout(-1)
 
         while key != self.binds['quit']:
             key = await asyncio.to_thread(self.stdscr.getch)

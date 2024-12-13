@@ -26,7 +26,7 @@ class LyricsInTerminal:
         self.window: Window | None = None
         self.track: Track | None = None
         self.input_manager: InputManager | None = None
-        self.tasks = None
+        self.tasks : asyncio.Task = None
         self.timeout = -1
 
         if stdout_mode:
@@ -141,8 +141,14 @@ def ErrorHandler(func):
 def init_pager(stdscr=None):
     lyrics = LyricsInTerminal(stdscr)
     try:
+        Logger.info('Starting lyrics pager...')
         asyncio.run(lyrics.start())
+        Logger.info('Exiting...')
     except asyncio.CancelledError:
+        exit(0)
+    except Exception as err:
+        print('Unexpected exception occurred.')
+        traceback.print_exc()
         exit(1)
 
 

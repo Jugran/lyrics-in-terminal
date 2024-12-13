@@ -1,8 +1,7 @@
-import os
 import asyncio
 from typing import List, Tuple
 
-from lyrics import Logger, utils, CACHE_PATH
+from lyrics import Logger, utils
 from lyrics.sources import Source
 from lyrics.sources.genius import GeniusSource
 from lyrics.sources.azlyrics import AZLyricsSource
