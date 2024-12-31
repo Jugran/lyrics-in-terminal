@@ -185,6 +185,22 @@ class Player:
 
         return False
 
+    def get_time_pos(self):
+        """Get current playback position in seconds."""
+        try:
+            if not self.running or not self.player_interface:
+                return 0
+                
+            # Get position in microseconds
+            position = self.player_interface.Get(
+                'org.mpris.MediaPlayer2.Player', 'Position')
+                
+            # Convert to seconds
+            return float(position) / 1000000
+            
+        except Exception as e:
+            return 0
+            
     def refresh(self, cycle_source=False, source=None, cache=True):
         ''' Re-fetches lyrics from procided source
             source -> source name ('google' or 'azlyrics')

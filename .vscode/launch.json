@@ -2,13 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Attach using Process Id",
+            "type": "debugpy",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        },
+        {
             "name": "Python: File",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/lyrics/lyrics_in_terminal.py",
             "console": "integratedTerminal",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}/lyrics:${PYTHONPATH}"
+                "PYTHONPATH": "${workspaceFolder}:${PYTHONPATH}"
             },
             "justMyCode": true
         },
