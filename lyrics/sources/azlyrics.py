@@ -39,7 +39,7 @@ class AZLyricsSource(SourceBase):
             return None
 
         az_regex = re.compile(
-            r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
+            r'Sorry about that. -->(.*)(?:<script>(.*))<!-- MxM banner -->', re.S)
 
         ly = az_regex.search(html)
         if ly is None:

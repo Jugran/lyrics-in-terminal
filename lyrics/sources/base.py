@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 class SourceBase(ABC):
     HEADER = {
-        'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch'
+        'User-Agent': 'User-Agent: Lynx/2.8.5rel.1 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/0.8.12'
     }
 
     async def get_html(self, url: str, header: dict = HEADER) -> str:

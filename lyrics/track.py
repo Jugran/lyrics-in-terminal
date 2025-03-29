@@ -44,8 +44,7 @@ class Track:
         self.source = default_source
         self.album = ''
         self.trackid = None
-        self.sources = [Source.LIBLRC,
-                        Source.GOOGLE, Source.AZLYRICS, Source.GENIUS]
+        self.sources = [Source.LIBLRC, Source.AZLYRICS, Source.GENIUS]
         self.status = Status.IDLE
         self.task = None
 
@@ -107,6 +106,9 @@ class Track:
         ''' loads lyrics from source
         '''
         self.status = Status.LOADING
+
+        if cycle_source is True and self.source not in self.sources:
+            self.source = self.sources[0]
 
         if cycle_source:
             self.next_source()
