@@ -65,7 +65,7 @@ class Track:
         if self.source is None or self.source == 'cache':
             self.source = source or self.sources[0]
 
-        if cycle_source is True and self.source == 'any':
+        if cycle_source is True and self.source not in self.sources:
             self.source = self.sources[0]
 
         if cycle_source:
