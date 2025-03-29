@@ -19,7 +19,7 @@ class Track:
         self.source = None
         self.album = None
         self.trackid = None
-        self.sources = ['google', 'azlyrics', 'genius']
+        self.sources = ['azlyrics', 'genius']
 
     def __str__(self):
         ''' trackname in format "{artist} - {title}"
