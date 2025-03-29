@@ -15,7 +15,7 @@ import requests
 
 url = 'https://www.google.com/search?q='
 HEADER = {
-    'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch'
+    'User-Agent': 'User-Agent: Lynx/2.8.5rel.1 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/0.8.12'
 }
 
 CLASS_NAME = r'\w{5,7} \w{4,5} \w{5,7}'  # dependent on User-Agent
@@ -107,7 +107,7 @@ def parse_genius(html: str | None) -> List[str] | None:
         lyrics_lines += "\n".join(lines)
 
     lyrics_lines = re.sub(r'\n{2,}', '\n', lyrics_lines)
-    lyrics_lines = lyrics_lines.replace('\n[', '\n\n[')
+    lyrics_lines = lyrics_lines.replace('\n[', '\n\n[').replace('&quot;', '"')
 
     lyrics_lines = lyrics_lines.split('\n')
 
@@ -124,7 +124,7 @@ def parse_azlyrics(html: str | None) -> List[str] | None:
         return None
 
     az_regex = re.compile(
-        r'<!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that. -->(.*)<!-- MxM banner -->', re.S)
+        r'Sorry about that. -->(.*)(?:<script>(.*))<!-- MxM banner -->', re.S)
 
     ly = az_regex.search(html)
     if ly == None:
