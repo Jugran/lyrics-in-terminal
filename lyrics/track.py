@@ -65,6 +65,9 @@ class Track:
         if self.source is None or self.source == 'cache':
             self.source = source or self.sources[0]
 
+        if cycle_source is True and self.source == 'any':
+            self.source = self.sources[0]
+
         if cycle_source:
             curr_source = self.sources.index(self.source)
             next_source = (curr_source + 1) % len(self.sources)

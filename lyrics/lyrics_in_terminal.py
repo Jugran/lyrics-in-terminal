@@ -5,6 +5,7 @@
 from lyrics.config import Config
 from lyrics.player import Player
 from lyrics.window import Window
+import traceback
 
 import sys
 import curses
@@ -20,6 +21,7 @@ def ErrorHandler(func):
             print('Please increase terminal window size!')
         except Exception as err:
             print('Unexpected exception occurred.', sys.exc_info(), err)
+            traceback.print_exc()
 
     return wrapper
 
