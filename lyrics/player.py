@@ -187,7 +187,7 @@ class Player:
 
     def refresh(self, cycle_source=False, source=None, cache=True):
         ''' Re-fetches lyrics from procided source
-            source -> source name ('google' or 'azlyrics')
+            source -> source name ('any' or 'azlyrics')
             cache -> bool | wether to store cache file
         '''
         self.track.get_lyrics(source, cycle_source, cache)
